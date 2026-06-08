@@ -1,0 +1,5 @@
+.wrap {
+  display: flex;
+  align-items: flex-end;
+  overflow: hidden;
+}

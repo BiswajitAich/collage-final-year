@@ -1,0 +1,88 @@
+.wrapper {
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  overflow: hidden;
+}
+
+.tableScroll {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+
+/* === HEADER === */
+.th {
+  padding: var(--space-3) var(--space-5);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--text-tertiary);
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  background: var(--bg-surface-2);
+  border-bottom: 1px solid var(--border-default);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.thSortable {
+  cursor: pointer;
+  transition: color var(--transition-fast);
+}
+
+.thSortable:hover { color: var(--text-primary); }
+
+.thContent {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.sortIcon {
+  display: flex;
+  align-items: center;
+  color: var(--text-tertiary);
+  transition: color var(--transition-fast);
+}
+
+.thSortable:hover .sortIcon { color: var(--accent-primary); }
+
+/* === ROWS === */
+.tr {
+  border-bottom: 1px solid var(--border-subtle);
+  transition: background var(--transition-fast);
+}
+
+.tr:last-child { border-bottom: none; }
+
+.tr:hover { background: var(--bg-surface-2); }
+
+.trClickable {
+  cursor: pointer;
+}
+
+.trClickable:focus-visible {
+  outline: 2px solid var(--accent-primary);
+  outline-offset: -2px;
+}
+
+/* === CELLS === */
+.td {
+  padding: var(--space-3) var(--space-5);
+  color: var(--text-secondary);
+  vertical-align: middle;
+  font-variant-numeric: tabular-nums;
+}
+
+/* === STATES === */
+.skeletonRow { pointer-events: none; }
+
+.emptyCell {
+  padding: 0 !important;
+}

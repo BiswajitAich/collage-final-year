@@ -1,0 +1,27 @@
+.strengthBar {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: 4px;
+}
+
+.strengthSegment {
+  flex: 1;
+  height: 3px;
+  border-radius: var(--radius-full);
+  background: var(--border-default);
+  transition: background var(--transition-base);
+}
+
+.strength_1 { background: var(--color-error); }
+.strength_2 { background: var(--color-warning); }
+.strength_3 { background: var(--color-info); }
+.strength_4 { background: var(--color-success); }
+
+.strengthLabel {
+  font-size: var(--text-xs);
+  color: var(--text-tertiary);
+  width: 48px;
+  text-align: right;
+  flex-shrink: 0;
+}

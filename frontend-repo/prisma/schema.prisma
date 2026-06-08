@@ -1,0 +1,293 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../lib/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+// =======================
+// USER
+// =======================
+model User {
+  id                String           @id @default(cuid())
+  email             String           @unique
+  name              String?
+  role              UserRole         @default(USER)
+  passwordHash      String
+  workflows         Workflow[]       @relation("WorkflowOwner")
+  approvedWorkflows Workflow[]       @relation("WorkflowApprovedBy")
+  sessions          VoiceSession[]
+  uploadedSchemas   UploadedSchema[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum UserRole {
+  ADMIN
+  USER
+}
+
+// =======================
+// WORKFLOW
+// =======================
+model Workflow {
+  id String @id @default(cuid())
+
+  schemaId String
+  schema   UploadedSchema @relation(fields: [schemaId], references: [id], onDelete: Cascade)
+
+  capabilityId String
+
+  name        String
+  description String?
+  purpose     String?
+
+  status         WorkflowStatus @default(DRAFT)
+  endpointType   EndpointType   @default(REST)
+  httpMethod     HttpMethod     @default(GET)
+  endpoint       String
+  requiresAuth   Boolean        @default(false)
+  generationMode GenerationMode @default(AI)
+
+  n8nWorkflowId   String? @unique
+  n8nWorkflowJson Json?
+  n8nWebhookUrl   String?
+
+  workflowJson Json?
+
+  executionCount Int   @default(0)
+  successRate    Float @default(0)
+  avgLatencyMs   Int   @default(0)
+
+  approvedAt   DateTime?
+  approvedById String?
+  approvedBy   User?     @relation("WorkflowApprovedBy", fields: [approvedById], references: [id], onDelete: SetNull)
+
+  ownerId String
+  owner   User   @relation("WorkflowOwner", fields: [ownerId], references: [id], onDelete: Cascade)
+
+  versions     WorkflowVersion[]
+  toolMappings WorkflowTool[]
+  executions   WorkflowExecution[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([schemaId, capabilityId])
+  @@index([schemaId])
+  @@index([capabilityId])
+  @@index([ownerId])
+  @@index([status])
+}
+
+model WorkflowVersion {
+  id String @id @default(cuid())
+
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  version      Int
+  workflowJson Json
+
+  createdAt DateTime @default(now())
+
+  @@unique([workflowId, version])
+}
+
+model WorkflowExecution {
+  id String @id @default(cuid())
+
+  workflowId String
+  workflow   Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+
+  status    ExecutionStatus
+  latencyMs Int?
+
+  startedAt   DateTime  @default(now())
+  completedAt DateTime?
+
+  requestData  Json?
+  responseData Json?
+  errorMessage String?
+
+  createdAt DateTime @default(now())
+
+  @@index([workflowId])
+  @@index([status])
+}
+
+// =======================
+// UPLOADED SCHEMA
+// =======================
+model UploadedSchema {
+  id                String       @id @default(cuid())
+  name              String
+  format            SchemaFormat
+  rawContent        String       @db.Text
+  parsedJson        Json?
+  entityCount       Int          @default(0)
+  relationshipCount Int          @default(0)
+  status            SchemaStatus
+  analysisResult    Json?
+
+  uploadedById String
+  uploadedBy   User     @relation(fields: [uploadedById], references: [id])
+  uploadedAt   DateTime @default(now())
+
+  workflows Workflow[]
+}
+
+// =======================
+// TOOL REGISTRY
+// =======================
+model Tool {
+  id String @id @default(cuid())
+
+  name        String
+  description String?
+  provider    String
+  apiBaseUrl  String?
+
+  status   ToolStatus
+  lastSync DateTime?
+  config   Json?
+
+  workflowLinks WorkflowTool[]
+
+  createdAt DateTime @default(now())
+}
+
+model WorkflowTool {
+  workflowId String
+  toolId     String
+
+  config Json?
+
+  workflow Workflow @relation(fields: [workflowId], references: [id], onDelete: Cascade)
+  tool     Tool     @relation(fields: [toolId], references: [id], onDelete: Cascade)
+
+  @@id([workflowId, toolId])
+}
+
+// =======================
+// VOICE SESSIONS
+// =======================
+model VoiceSession {
+  id String @id @default(cuid())
+
+  userId     String
+  customerId String?
+  user       User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  status SessionStatus
+
+  startTime DateTime  @default(now())
+  endTime   DateTime?
+
+  durationSec   Int?
+  messageCount  Int     @default(0)
+  toolCallCount Int     @default(0)
+  successRate   Float   @default(0)
+  roomName      String?
+  phoneNumber   String?
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([customerId])
+  @@index([userId, customerId])
+  @@index([status])
+}
+
+// =======================
+// LOGS
+// =======================
+model LogEntry {
+  id String @id @default(cuid())
+
+  timestamp DateTime @default(now())
+  level     LogLevel
+  component String
+  event     String
+  message   String
+  metadata  Json?
+
+  @@index([timestamp])
+  @@index([level])
+  @@index([component])
+}
+
+// =======================
+// ENUMS
+// =======================
+enum WorkflowStatus {
+  DRAFT
+  PENDING_REVIEW
+  ACTIVE
+  INACTIVE
+  FAILED
+}
+
+enum EndpointType {
+  REST
+  WEBHOOK
+}
+
+enum HttpMethod {
+  GET
+  POST
+  PUT
+  PATCH
+  DELETE
+}
+
+enum GenerationMode {
+  AI
+  GUIDED
+  MANUAL
+}
+
+enum ExecutionStatus {
+  RUNNING
+  SUCCESS
+  FAILED
+}
+
+enum ToolStatus {
+  ACTIVE
+  INACTIVE
+  ERROR
+}
+
+enum SessionStatus {
+  PENDING
+  ACTIVE
+  ENDED
+  FAILED
+}
+
+enum LogLevel {
+  INFO
+  WARNING
+  ERROR
+  DEBUG
+}
+
+enum SchemaFormat {
+  SQL
+  PRISMA
+  JSON
+  OPENAPI
+}
+
+enum SchemaStatus {
+  PARSED
+  ANALYZED
+  WORKFLOWS_GENERATED
+  DEPLOYED
+  FAILED
+  ERROR
+}
