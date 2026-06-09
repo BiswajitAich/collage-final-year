@@ -9,6 +9,7 @@ dependencies = [
     "asyncpg>=0.31.0",
     "fastapi[standard]>=0.136.3",
     "livekit-agents>=1.5.17",
+    "livekit-plugins-silero>=1.5.17",
     "psycopg[binary]>=3.3.4",
     "python-dotenv>=1.2.2",
     "sqlalchemy[asyncio]>=2.0.50",

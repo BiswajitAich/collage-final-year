@@ -8,7 +8,7 @@ from pydantic import BaseModel, field_validator
 
 class CreateRoomRequest(BaseModel):
     user_id: str
-    customerId: str
+    customer_id: str
     name: Optional[str] = None
     phone_number: Optional[str] = None  
 
