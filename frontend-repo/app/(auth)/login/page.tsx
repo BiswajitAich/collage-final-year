@@ -32,6 +32,9 @@ export default function LoginPage() {
       return;
     }
 
+    if (result.user) {
+      login(result.user as any, "");
+    }
     router.push('/dashboard');
   };
 

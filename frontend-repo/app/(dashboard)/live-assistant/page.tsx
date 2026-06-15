@@ -12,6 +12,7 @@ import {
 import { ConnectionState, DisconnectReason } from 'livekit-client';
 import '@livekit/components-styles';
 import { PageHeader } from '@/components/ui/UIComponents';
+import { useAuthStore } from '@/stores';
 
 type CreateRoomResponse = {
   session_id: string;
@@ -49,10 +50,11 @@ function useMicLevel(active: boolean): number {
         analyserRef.current = analyser;
         analyser.fftSize = 256;
         ctx.createMediaStreamSource(stream).connect(analyser);
-        const buf = new Uint8Array(analyser.frequencyBinCount);
+        const buf = new Uint8Array(analyser.fftSize);
         function tick() {
-          analyser.getByteFrequencyData(buf);
-          const avg = buf.reduce((a, b) => a + b, 0) / buf.length;
+          analyser.getByteTimeDomainData(buf);
+          const sum = buf.reduce((a, b) => a + Math.abs(b - 128), 0);
+          const avg = sum / buf.length;
           setLevel(Math.min(100, Math.round((avg / 128) * 100)));
           rafRef.current = requestAnimationFrame(tick);
         }
@@ -275,10 +277,16 @@ export default function LiveAssistantPage() {
   const [micStep, setMicStep] = useState<'idle' | 'requesting' | 'denied'>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  const [userId, setUserId] = useState('cmpw8nc79000062uts7fdcn6u');
-  const [customerId, setCustomerId] = useState('cust-001');
-  const [name, setName] = useState('Biswajit');
-  const [phoneNumber, setPhoneNumber] = useState('+919876543210');
+  const authUser = useAuthStore((s) => s.user);
+  const [userId, setUserId] = useState('');
+  const [customerId, setCustomerId] = useState('');
+  const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState('');
+
+  useEffect(() => {
+    if (authUser?.id) setUserId((prev) => prev || authUser.id);
+    if (authUser?.name) setName((prev) => prev || authUser.name);
+  }, [authUser?.id, authUser?.name]);
 
   async function startCall() {
     setLoading(true);
@@ -367,24 +375,23 @@ export default function LiveAssistantPage() {
               <h2 className={styles.setupTitle}>Start a voice session</h2>
               <p className={styles.setupDesc}>Connect in real-time with your AI assistant</p>
             </div>
-            <div className={styles.fieldGrid}>
-              <div className={styles.field}>
-                <label htmlFor="userId">User ID</label>
-                <input id="userId" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="User ID" autoComplete="off" />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="customerId">Customer ID</label>
-                <input id="customerId" value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="Customer ID" autoComplete="off" />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="name">Name</label>
-                <input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="phone">Phone number</label>
-                <input id="phone" value={phoneNumber} onChange={(e) => setPhoneNumber(e.target.value)} placeholder="+91…" type="tel" />
-              </div>
+            <div className={styles.field}>
+              <label htmlFor="customerId">Customer phone or name</label>
+              <input id="customerId" value={customerId} onChange={(e) => setCustomerId(e.target.value)} placeholder="e.g. +91… or customer name" autoComplete="off" />
             </div>
+            <details className={styles.advancedFields}>
+              <summary>Advanced</summary>
+              <div className={styles.fieldGrid}>
+                <div className={styles.field}>
+                  <label htmlFor="userId">Your User ID</label>
+                  <input id="userId" value={userId} onChange={(e) => setUserId(e.target.value)} placeholder="User ID" autoComplete="off" />
+                </div>
+                <div className={styles.field}>
+                  <label htmlFor="name">Your Name</label>
+                  <input id="name" value={name} onChange={(e) => setName(e.target.value)} placeholder="Your name" />
+                </div>
+              </div>
+            </details>
             {error && (
               <div className={styles.errorBox} role="alert">
                 <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">

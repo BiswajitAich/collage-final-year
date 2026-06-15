@@ -1,45 +1,35 @@
-import { sleep } from '@/lib/utils';
-import { MOCK_LATENCY } from '@/lib/constants';
 import {
-  mockDashboardStats, mockRecentActivity, mockAISuggestions,
-  mockWorkflowUsageTimeSeries, mockSuccessRateTimeSeries,
-  mockEndpointCallsTimeSeries, mockVoiceSessionsTimeSeries
-} from './mock-data/dashboard.data';
+  getDashboardStats, getRecentActivity, getAISuggestions,
+  getWorkflowUsageSeries, getSuccessRateSeries,
+} from '@/app/(dashboard)/dashboard/actions';
 import type { DashboardStats, RecentActivity, AISuggestion, TimeSeriesDataPoint } from '@/lib/types';
 
 export const dashboardService = {
   async getStats(): Promise<DashboardStats> {
-    await sleep(MOCK_LATENCY.fast);
-    return mockDashboardStats;
+    return getDashboardStats();
   },
 
   async getRecentActivity(limit = 8): Promise<RecentActivity[]> {
-    await sleep(MOCK_LATENCY.fast);
-    return mockRecentActivity.slice(0, limit);
+    return getRecentActivity(limit);
   },
 
   async getAISuggestions(): Promise<AISuggestion[]> {
-    await sleep(MOCK_LATENCY.medium);
-    return mockAISuggestions;
+    return getAISuggestions();
   },
 
   async getWorkflowUsageSeries(days = 30): Promise<TimeSeriesDataPoint[]> {
-    await sleep(MOCK_LATENCY.fast);
-    return mockWorkflowUsageTimeSeries.slice(-days);
+    return getWorkflowUsageSeries(days);
   },
 
   async getSuccessRateSeries(days = 30): Promise<TimeSeriesDataPoint[]> {
-    await sleep(MOCK_LATENCY.fast);
-    return mockSuccessRateTimeSeries.slice(-days);
+    return getSuccessRateSeries(days);
   },
 
-  async getEndpointCallsSeries(days = 30): Promise<TimeSeriesDataPoint[]> {
-    await sleep(MOCK_LATENCY.fast);
-    return mockEndpointCallsTimeSeries.slice(-days);
+  async getEndpointCallsSeries(_days = 30): Promise<TimeSeriesDataPoint[]> {
+    return [];
   },
 
-  async getVoiceSessionsSeries(days = 30): Promise<TimeSeriesDataPoint[]> {
-    await sleep(MOCK_LATENCY.fast);
-    return mockVoiceSessionsTimeSeries.slice(-days);
+  async getVoiceSessionsSeries(_days = 30): Promise<TimeSeriesDataPoint[]> {
+    return [];
   },
 };

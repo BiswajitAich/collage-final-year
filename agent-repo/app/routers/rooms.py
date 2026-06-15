@@ -33,7 +33,7 @@ async def create_room(
     metadata = {
         "user_id": req.user_id,
         "customer_id": req.customer_id,
-        "caller_phone_number": req.phone_number or "",
+        "caller_phone_number": req.phone_number or req.customer_id or "",
         "name": req.name or "User",
     }
 
@@ -52,6 +52,7 @@ async def create_room(
             customer_id=req.customer_id,
             room_name=room_name,
             phone_number=req.phone_number,
+            name=req.name,
         )
 
     except Exception as exc:

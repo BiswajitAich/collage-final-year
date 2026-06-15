@@ -2,6 +2,7 @@
 
 import prisma from "@/lib/prisma";
 import bcrypt from "bcrypt";
+import { cookies } from "next/headers";
 
 interface RegisterInput {
     name: string;
@@ -34,8 +35,31 @@ export async function registerUser(data: RegisterInput) {
         },
     });
 
+    const cookieStore = await cookies();
+    cookieStore.set(
+        "user",
+        JSON.stringify({
+            name: user.name,
+            email: user.email,
+            role: user.role,
+            id: user.id,
+        }),
+        {
+            httpOnly: true,
+            secure: process.env.NODE_ENV === "production",
+            sameSite: "lax",
+            path: "/",
+            maxAge: 60 * 60 * 24 * 7,
+        }
+    );
+
     return {
         success: true,
-        userId: user.id,
+        user: {
+            id: user.id,
+            name: user.name ?? "",
+            email: user.email,
+            role: user.role,
+        },
     };
 }

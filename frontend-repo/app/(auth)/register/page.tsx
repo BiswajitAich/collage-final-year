@@ -38,7 +38,11 @@ export default function RegisterPage() {
       alert(result.error);
       return;
     }
-    router.push('/login');
+
+    if (result.user) {
+      login(result.user as any, "");
+    }
+    router.push('/dashboard');
   };
 
   const strength = [

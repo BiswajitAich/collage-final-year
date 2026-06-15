@@ -32,11 +32,7 @@ load_dotenv(".env")
 
 TOOLS_API_URL = os.getenv("TOOLS_API_URL", "http://localhost:8000/agent/tools").strip()
 
-DEFAULT_FAKE_METADATA = {
-    "user_id": "20000000-0000-0000-0000-000000000001",
-    "caller_phone_number": "9999999999",
-    "name": "Test User",
-}
+DEFAULT_FAKE_METADATA: dict[str, str] = {}
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -108,6 +104,14 @@ class VariableTemplater:
             str(metadata.get("caller_phone_number", "")),
         )
         rendered = rendered.replace(
+            "{{customer_id}}",
+            str(metadata.get("customer_id", "")),
+        )
+        rendered = rendered.replace(
+            "{{user_name}}",
+            str(metadata.get("name", "")),
+        )
+        rendered = rendered.replace(
             "{{tools_summary}}",
             extra.get("tools_summary", "") if extra else "",
         )
@@ -135,10 +139,9 @@ class DefaultAgent(Agent):
         )
 
     async def on_enter(self):
-        # pass
         await self.session.generate_reply(
             instructions=self._templater.render(
-                "Greet the user by name if you know it, and offer your assistance."
+                "Greet {{user_name}} by name. State the customer {{customer_id}} you will help with. Do NOT ask for any personal information — the form already provided everything. Ask how you can help."
             ),
             allow_interruptions=True,
         )

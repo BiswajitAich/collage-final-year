@@ -632,7 +632,33 @@
     text-align: center;
   }
 
-  .metaDivider {
-    display: none;
+.metaDivider {
+  display: none;
   }
+}
+
+/* ── Advanced fields (collapsible) ────────────────────────────────────── */
+
+.advancedFields {
+  margin-top: 0;
+  font-size: 0.78rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.advancedFields summary {
+  cursor: pointer;
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.3);
+  padding: 0.3rem 0;
+  user-select: none;
+}
+
+.advancedFields summary:hover {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.advancedFields .fieldGrid {
+  margin-top: 0.75rem;
 }

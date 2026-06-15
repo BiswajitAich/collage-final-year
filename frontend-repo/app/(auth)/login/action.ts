@@ -58,6 +58,12 @@ export async function loginUser(data: LoginInput) {
     );
     return {
         success: true,
+        user: {
+            id: existingUser.id,
+            name: existingUser.name ?? "",
+            email: existingUser.email,
+            role: existingUser.role,
+        },
     };
 }
 

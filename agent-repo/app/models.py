@@ -45,3 +45,4 @@ class VoiceSession(Base):
     )
     roomName = Column(String, nullable=True)     
     phoneNumber = Column(String, nullable=True)  
+    name = Column(String, nullable=True)  
