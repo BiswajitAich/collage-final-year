@@ -1,4 +1,16 @@
 services:
+  postgres:
+    image: postgres:16
+    restart: always
+    ports:
+      - "127.0.0.1:5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: admin123
+      POSTGRES_DB: n8n
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+
   n8n:
     image: docker.n8n.io/n8nio/n8n
     restart: always
@@ -13,8 +25,17 @@ services:
       - NODE_ENV=production
       - GENERIC_TIMEZONE=${GENERIC_TIMEZONE}
       - TZ=${GENERIC_TIMEZONE}
+      - DB_TYPE=postgresdb
+      - DB_POSTGRESDB_HOST=postgres
+      - DB_POSTGRESDB_PORT=5432
+      - DB_POSTGRESDB_USER=admin
+      - DB_POSTGRESDB_PASSWORD=admin123
+      - DB_POSTGRESDB_DATABASE=n8n
+    depends_on:
+      - postgres
     volumes:
       - n8n_data:/home/node/.n8n
 
 volumes:
+  pg_data:
   n8n_data:

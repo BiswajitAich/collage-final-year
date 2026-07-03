@@ -88,7 +88,7 @@ export const generateReview = async (
                         description: z.string(),
                         entities: z.array(z.string()),
                         confidence: z.number(),
-                        category: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+                        category: z.enum(["READ", "CREATE", "UPDATE", "DELETE", "SEARCH", "REPORT", "WORKFLOW"]),
                         suggestedEndpoint: z.string(),
                         suggestedMethod: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
                     })

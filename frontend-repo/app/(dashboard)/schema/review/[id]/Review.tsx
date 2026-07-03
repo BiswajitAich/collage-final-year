@@ -52,8 +52,12 @@ export default function SchemaReview({ schema }: { schema: UploadedSchema }) {
 
     const handleApprove = () => {
         addToast({ type: 'success', title: 'Schema approved', message: 'Proceeding to workflow generation.' });
-        // router.push('/');
-        return
+        const firstCapability = llmReview?.capabilities?.[0];
+        if (firstCapability) {
+            router.push(`/workflows/new/${schema.id}/${firstCapability.id}`);
+        } else {
+            router.push(`/schema/review/${schema.id}`);
+        }
     };
 
     const handleReject = () => {
@@ -120,7 +124,7 @@ export default function SchemaReview({ schema }: { schema: UploadedSchema }) {
             const color = edgeColor[rel.type] ?? "#6366f1";
 
             return {
-                id: `${rel.fieldName}-${rel.toEntity}-${rel.fieldName}`,
+                id: `${rel.fromEntity}-${rel.toEntity}-${rel.fieldName}-${rel.type}`,
                 source: source?.id ?? rel.fromEntity,
                 target: target?.id ?? rel.toEntity,
                 label: edgeMap[rel.type] ?? rel.type,

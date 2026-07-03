@@ -8,6 +8,7 @@ import { WorkflowGenerationFormData } from "@/lib/validators";
 import { groq } from "@ai-sdk/groq";
 import { Prisma } from '@/lib/generated/prisma/client';
 import { generateText, Output } from "ai";
+import { revalidateTag } from "next/cache";
 import z from "zod";
 import { WorkflowGraphData, WorkflowGraphSchema } from "../workflow.schema";
 import { Workflow } from "@/lib/types";
@@ -117,6 +118,7 @@ export async function generateWorkFlow(
         },
     });
     console.log('[GENERATE CHECKPOINT 7] Workflow upserted, DB id:', workflow.id);
+    revalidateTag(`get-workflow-${user.id}`);
 
     console.log('[GENERATE CHECKPOINT 8] Creating WorkflowExecution record');
     await prisma.workflowExecution.create({

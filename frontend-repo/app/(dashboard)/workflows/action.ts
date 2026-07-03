@@ -32,6 +32,29 @@ export async function getWorkFlows() {
     if (!user?.id) { return null; }
     return await cacheHelper(user.id);
 }
+export async function getWorkflowById(id: string) {
+    return await prisma.workflow.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            name: true,
+            description: true,
+            status: true,
+            endpoint: true,
+            httpMethod: true,
+            endpointType: true,
+            requiresAuth: true,
+            generationMode: true,
+            executionCount: true,
+            successRate: true,
+            avgLatencyMs: true,
+            n8nWorkflowId: true,
+            workflowJson: true,
+            createdAt: true,
+            updatedAt: true,
+        }
+    });
+}
 export async function addWorkflowToN8n(id: string) {
     console.log('[CHECKPOINT 1] addWorkflowToN8n called with id:', id);
     if (!id) {
