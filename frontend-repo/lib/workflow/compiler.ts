@@ -20,16 +20,20 @@ import { WorkflowEdge, WorkflowGraphData, WorkflowNode } from "@/app/(dashboard)
 // ─────────────────────────────────────────────────────────────────────────────
 
 export function graphToN8n(ir: WorkflowGraphData): CompileResult {
+    console.log('[COMPILER CHECKPOINT 1] graphToN8n called, ir.id:', ir?.id, 'ir.description:', ir?.description);
     const warnings: string[] = [];
     const errors: string[] = [];
 
     // ── 1. Validate IR structure ───────────────────────────────────────────────
     const validationErrors = validateIR(ir);
     if (validationErrors.length > 0) {
+        console.log('[COMPILER ERROR] Validation failed:', validationErrors);
         return { success: false, errors: validationErrors };
     }
+    console.log('[COMPILER CHECKPOINT 2] IR validation passed');
 
     const { graph, id, description } = ir;
+    console.log('[COMPILER CHECKPOINT 3] Nodes:', graph.nodes.length, 'Edges:', graph.edges.length);
 
     // ── 2. Compile nodes ───────────────────────────────────────────────────────
     const n8nNodes: N8nNode[] = [];
@@ -39,6 +43,7 @@ export function graphToN8n(ir: WorkflowGraphData): CompileResult {
         const mapper = NODE_MAPPERS[node.type];
 
         if (!mapper) {
+            console.log('[COMPILER WARN] No mapper for node type:', node.type, 'on node:', node.id);
             errors.push(`Unknown node type "${node.type}" on node "${node.id}"`);
             continue;
         }
@@ -57,13 +62,18 @@ export function graphToN8n(ir: WorkflowGraphData): CompileResult {
             n8nNodes.push(n8nNode);
             nodeIdToLabel.set(node.id, node.label);
         } catch (err) {
+            console.log('[COMPILER ERROR] Mapping failed for node:', node.id, err);
             errors.push(
                 `Failed to map node "${node.id}": ${err instanceof Error ? err.message : String(err)}`
             );
         }
     }
 
-    if (errors.length > 0) return { success: false, errors };
+    if (errors.length > 0) {
+        console.log('[COMPILER ERROR] Compilation errors:', errors);
+        return { success: false, errors };
+    }
+    console.log('[COMPILER CHECKPOINT 4] Compiled', n8nNodes.length, 'n8n nodes');
 
     // ── 3. Warn on detached nodes ──────────────────────────────────────────────
     const connectedIds = new Set<string>();
@@ -80,8 +90,11 @@ export function graphToN8n(ir: WorkflowGraphData): CompileResult {
         }
     }
 
+    if (warnings.length > 0) console.log('[COMPILER WARN] Warnings:', warnings);
+
     // ── 4. Build connection graph ─────────────────────────────────────────────
     const connections = buildConnections(graph.nodes, graph.edges, nodeIdToLabel, warnings);
+    console.log('[COMPILER CHECKPOINT 5] Connections built for', Object.keys(connections).length, 'sources');
 
     // ── 5. Assemble final workflow ─────────────────────────────────────────────
     const workflow: N8nWorkflow = {
@@ -99,6 +112,7 @@ export function graphToN8n(ir: WorkflowGraphData): CompileResult {
         id: id || crypto.randomUUID(),
         tags: [],
     };
+    console.log('[COMPILER CHECKPOINT 6] Workflow assembled, returning success');
 
     return {
         success: true,
