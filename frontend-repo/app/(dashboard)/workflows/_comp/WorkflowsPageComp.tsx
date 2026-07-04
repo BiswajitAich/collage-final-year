@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Search, Zap, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { workflowService } from '@/lib/api/services';
@@ -52,7 +52,19 @@ export default function WorkflowsPageComp({ workflowsData }: { workflowsData: Wo
         FAILED: workflows?.filter((w) => w.status === 'FAILED').length,
         INACTIVE: workflows?.filter((w) => w.status === 'INACTIVE').length,
     }), [workflows]);
+    function TimeAgo({ date }: { date: string }) {
+        const [mounted, setMounted] = useState(false);
 
+        useEffect(() => {
+            setMounted(true);
+        }, []);
+
+        if (!mounted) {
+            return <span>{formatDate(date)}</span>;
+        }
+
+        return <span>{timeAgo(date)}</span>;
+    }
     const columns: TableColumn<WorkflowListDTO>[] = [
         {
             key: 'name',

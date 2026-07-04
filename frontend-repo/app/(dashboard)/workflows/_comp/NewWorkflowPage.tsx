@@ -582,7 +582,7 @@ export default function NewWorkflowPage({
                   onClick={handleApprove}
                   isLoading={isDeploying}
                 >
-                  {isDeploying ? 'Deploying…' : 'Approve &amp; Test on n8n'}
+                  {isDeploying ? 'Deploying…' : 'Approve & Test on n8n'}
                 </Button>
               </div>
             </div>
