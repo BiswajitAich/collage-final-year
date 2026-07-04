@@ -107,7 +107,7 @@ export default function LoginPage() {
               <input type="checkbox" {...register('rememberMe')} className={styles.checkbox} />
               Remember me
             </label>
-            <Link href="#" className={styles.forgotLink}>Forgot password?</Link>
+            <Link href="/forgot" className={styles.forgotLink}>Forgot password?</Link>
           </div>
 
           {serverError && <div className={styles.serverError}>{serverError}</div>}
