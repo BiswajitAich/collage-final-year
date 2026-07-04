@@ -17,8 +17,10 @@ export default function WorkflowEditPage() {
   const params = useParams();
   const router = useRouter();
   const workflowId = params.workflowId as string;
-  const { selectedWorkflow, setSelectedWorkflow, updateWorkflow } = useWorkflowStore();
-  const { addToast } = useUIStore();
+  const selectedWorkflow = useWorkflowStore(s => s.selectedWorkflow);
+  const setSelectedWorkflow = useWorkflowStore(s => s.setSelectedWorkflow);
+  const updateWorkflow = useWorkflowStore(s => s.updateWorkflow);
+  const addToast = useUIStore(s => s.addToast);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
 

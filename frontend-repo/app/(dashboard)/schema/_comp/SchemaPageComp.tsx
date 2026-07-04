@@ -1,7 +1,7 @@
 'use client';
 
 import { useRef, useState } from 'react';
-import { Upload, FileCode2, Eye, RefreshCw, Database } from 'lucide-react';
+import { Upload, FileCode2, Eye, RefreshCw, Database, Code2 } from 'lucide-react';
 // import { schemaService } from '@/lib/api/services';
 import { useSchemaStore, useUIStore } from '@/stores';
 import { PageHeader, StatusBadge, EmptyState, LoadingSkeleton } from '@/components/ui/UIComponents';
@@ -11,13 +11,17 @@ import { timeAgo } from '@/lib/utils';
 import type { UploadedSchema, SchemaEntity, TableColumn } from '@/lib/types';
 import styles from '../schema.module.css';
 import { getSchemas, revalidateGetSchemas, uploadSchemaAction } from '../action';
-import SyntaxHighlighter from 'react-syntax-highlighter';
+import dynamic from 'next/dynamic';
 import { atelierForestDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
+const SyntaxHighlighter = dynamic(() => import('react-syntax-highlighter').then(m => m.default), { ssr: false });
 import { mapParsedSchema } from '@/lib/mapper';
 
 export default function SchemaPageComp({ schemasData }: { schemasData: UploadedSchema[] }) {
-    const { isLoading, isUploading, setLoading, setUploading } = useSchemaStore();
-    const { addToast } = useUIStore();
+    const isLoading = useSchemaStore(s => s.isLoading);
+    const isUploading = useSchemaStore(s => s.isUploading);
+    const setLoading = useSchemaStore(s => s.setLoading);
+    const setUploading = useSchemaStore(s => s.setUploading);
+    const addToast = useUIStore(s => s.addToast);
     const [dragOver, setDragOver] = useState(false);
     const [pasteMode, setPasteMode] = useState(false);
     const [displayRawSchema, setDisplayRawSchema] = useState(false);
@@ -48,6 +52,11 @@ export default function SchemaPageComp({ schemasData }: { schemasData: UploadedS
                 content
             );
 
+            if (!result.success) {
+                addToast({ type: 'error', title: 'Upload failed', message: result.error ?? 'Failed to save schema' });
+                return;
+            }
+
             const uploaded = mapParsedSchema(
                 file.name,
                 format,
@@ -56,23 +65,15 @@ export default function SchemaPageComp({ schemasData }: { schemasData: UploadedS
             );
 
             setSchemas((prev) => [uploaded, ...prev]);
-
             setSelectedSchema(uploaded);
 
-            const isSuccessful = uploaded.status === 'PARSED';
-
             addToast({
-                type: isSuccessful
-                    ? "success"
-                    : "error",
-                title:
-                    isSuccessful
-                        ? "Schema uploaded"
-                        : "Schema invalid",
-                message: isSuccessful
-                    ? `${uploaded.entityCount} entities detected`
-                    : "Schema parsing failed",
+                type: "success",
+                title: "Schema uploaded",
+                message: `${uploaded.entityCount} entities detected`,
             });
+
+            await revalidateGetSchemas();
         } catch {
             addToast({
                 type: "error",
@@ -89,21 +90,16 @@ export default function SchemaPageComp({ schemasData }: { schemasData: UploadedS
 
         try {
             setUploading(true);
-            console.log("uploadSchemaAction called");
 
             const result = await uploadSchemaAction(
                 `manual-schema.${schemaFormat.toLowerCase()}`,
                 schemaFormat,
                 pasteText
             );
-            console.log("uploadSchemaAction ended ", result);
 
             if (!result.success) {
-                addToast({
-                    type: 'error',
-                    title: 'Error!',
-                    message: result.error
-                })
+                addToast({ type: 'error', title: 'Error!', message: result.error })
+                return;
             }
 
             const uploaded = mapParsedSchema(
@@ -120,21 +116,9 @@ export default function SchemaPageComp({ schemasData }: { schemasData: UploadedS
             setPasteText("");
             setPasteMode(false);
 
-            // const isSuccessful = uploaded.status === 'parsed';
+            addToast({ type: "success", title: "Schema analyzed", message: `${uploaded.entityCount} entities detected` });
 
-            // addToast({
-            //   type: isSuccessful
-            //     ? "success"
-            //     : "error",
-            //   title:
-            //     isSuccessful
-            //       ? "Schema analyzed"
-            //       : "Analysis failed",
-            //   message:
-            //     isSuccessful
-            //       ? `${uploaded.entityCount} entities detected`
-            //       : "Could not parse schema",
-            // });
+            await revalidateGetSchemas();
         } finally {
             setUploading(false);
         }

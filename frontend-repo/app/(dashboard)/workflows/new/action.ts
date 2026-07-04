@@ -58,11 +58,15 @@ export async function generateWorkFlow(
 
     try {
         console.log('[GENERATE CHECKPOINT 3] Calling LLM (Groq) for workflow generation');
-        const { text } = await generateText({
+        const llmPromise = generateText({
             model: groq(GROQ_MODEL),
             output: Output.json(WorkflowGraphSchema),
             prompt: buildWorkflowPrompt(workflowJson),
         });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('LLM request timed out after 30s')), 30000)
+        );
+        const { text } = await Promise.race([llmPromise, timeoutPromise]);
         console.log('[GENERATE CHECKPOINT 4] LLM response received, length:', text.length);
         generatedGraph = JSON.parse(text) as z.infer<typeof WorkflowGraphSchema>;
         console.log('[GENERATE CHECKPOINT 5] Parsed graph:', {

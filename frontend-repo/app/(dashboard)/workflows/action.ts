@@ -124,7 +124,7 @@ export async function addWorkflowToN8n(id: string) {
             res = await fetch(
                 `${baseUrl}/api/v1/workflows/${workflow.n8nWorkflowId}`,
                 {
-                    method: "PUT",
+                    method: "PATCH",
                     headers,
                     body: JSON.stringify(payload),
                     signal: controller.signal
@@ -157,21 +157,34 @@ export async function addWorkflowToN8n(id: string) {
             hasWebhook: data.nodes?.some((n: any) => n.type === "n8n-nodes-base.webhook"),
         }, null, 2));
 
+        const hasWebhookNode = data.nodes?.some(
+            (node: any) => node.type === "n8n-nodes-base.webhook"
+        );
         const webhookNode = data.nodes?.find(
             (node: any) => node.type === "n8n-nodes-base.webhook"
         );
         const webhookPath = webhookNode?.parameters?.path ?? null;
-        console.log('[CHECKPOINT 8] webhookPath extracted:', webhookPath);
+        console.log('[CHECKPOINT 8] webhookPath:', webhookPath, 'hasWebhookNode:', hasWebhookNode);
 
         createdWorkflowId = data.id;
-        if (!data || !createdWorkflowId || !webhookPath) {
-            console.log('[ERROR] Missing required fields in n8n response:', {
-                hasData: !!data,
-                createdWorkflowId,
-                webhookPath,
-            });
+        if (!data || !createdWorkflowId) {
+            console.log('[ERROR] Missing workflow id in n8n response');
             throw new Error(`N8N workflow creation error: ${JSON.stringify(data)}`);
         }
+        if (hasWebhookNode && !webhookPath) {
+            console.log('[ERROR] Webhook node present but missing path');
+            throw new Error('Webhook node is missing the path parameter');
+        }
+
+        // Deactivate before updating if this is a re-deploy
+        if (workflow?.n8nWorkflowId) {
+            console.log('[CHECKPOINT 8b] Deactivating existing workflow before update');
+            await fetch(
+                `${baseUrl}/api/v1/workflows/${workflow.n8nWorkflowId}/deactivate`,
+                { method: "POST", headers, signal: controller.signal }
+            ).catch(() => console.log('[INFO] Deactivate skipped — maybe already inactive'));
+        }
+
         console.log('[CHECKPOINT 9] Activating workflow:', createdWorkflowId);
         const activateRes = await fetch(
             `${baseUrl}/api/v1/workflows/${createdWorkflowId}/activate`,
@@ -198,6 +211,18 @@ export async function addWorkflowToN8n(id: string) {
                     : null,
                 status: 'ACTIVE',
             }
+        });
+        // Create WorkflowVersion record for history
+        const latestVersion = await prisma.workflowVersion.findFirst({
+            where: { workflowId: id },
+            orderBy: { version: 'desc' },
+        });
+        await prisma.workflowVersion.create({
+            data: {
+                workflowId: id,
+                version: (latestVersion?.version ?? 0) + 1,
+                workflowJson: workflow?.workflowJson as any ?? {},
+            },
         });
         console.log('[CHECKPOINT 12] Workflow deployment complete!');
     } catch (error) {

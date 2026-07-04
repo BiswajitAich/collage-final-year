@@ -20,22 +20,18 @@ export const NodeType = z.enum([
     "api-call",
     "response",
     "error",
-    "trigger",
-    "transform",
     "condition",
-    "business-logic",
-    "loop",
     "merge",
 ])
 export const NodeSchema = z.object({
     id: z.string(),
     type: NodeType,
     label: z.string(),
-    description: z.string(),
+    description: z.string().optional().default(""),
     position: NodePositionSchema,
-    inputs: z.array(PortSchema),
-    outputs: z.array(PortSchema),
-    config: NodeConfigSchema,
+    inputs: z.array(PortSchema).optional().default([]),
+    outputs: z.array(PortSchema).optional().default([]),
+    config: NodeConfigSchema.optional().default({}),
 });
 
 export const EdgeSchema = z.object({
@@ -52,9 +48,9 @@ export const EndpointType = z.enum(["REST", "WEBHOOK"]);
 export const WorkflowGraphSchema = z.object({
     id: z.string(),
     name: z.string(),
-    description: z.string(),
-    httpMethod: HttpMethod,
-    endpointType: EndpointType,
+    description: z.string().optional().default(""),
+    httpMethod: HttpMethod.optional().default("GET"),
+    endpointType: EndpointType.optional().default("REST"),
     graph: z.object({
         nodes: z.array(NodeSchema),
         edges: z.array(EdgeSchema),

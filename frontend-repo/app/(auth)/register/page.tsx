@@ -15,7 +15,7 @@ import { registerUser } from './actions';
 
 export default function RegisterPage() {
   const router = useRouter();
-  const { login } = useAuthStore();
+  const login = useAuthStore(s => s.login);
   const [showPassword, setShowPassword] = useState(false);
 
   const {

@@ -23,10 +23,12 @@ const NAV_ITEMS = [
 
 export function Sidebar() {
   const pathname = usePathname();
-  const { isSidebarCollapsed, toggleSidebar } = useUIStore();
+  const isSidebarCollapsed = useUIStore(s => s.isSidebarCollapsed);
+  const toggleSidebar = useUIStore(s => s.toggleSidebar);
 
   const isActive = (href: string) => {
     if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/schema') return pathname === href;
     return pathname.startsWith(href);
   };
 

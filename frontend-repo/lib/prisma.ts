@@ -11,5 +11,6 @@ const prisma =
   new PrismaClient({
     adapter, 
   }); 
-if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma; 
+if (process.env.NODE_ENV !== "production") globalForPrisma.prisma = prisma;
+prisma.$connect().catch(() => {});
 export default prisma; 

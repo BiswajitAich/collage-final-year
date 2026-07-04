@@ -12,10 +12,10 @@ import type { N8nWorkflow, N8nCreateWorkflowResponse, N8nDeployResult } from "./
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getConfig(): { baseUrl: string; apiKey: string } {
-  const baseUrl = process.env.N8N_BASE_URL?.replace(/\/$/, "");
+  const baseUrl = (process.env.N8N_BASE_URL || process.env.N8N_URL)?.replace(/\/$/, "");
   const apiKey = process.env.N8N_API_KEY;
 
-  if (!baseUrl) throw new N8nClientError("N8N_BASE_URL environment variable is not set");
+  if (!baseUrl) throw new N8nClientError("N8N_BASE_URL or N8N_URL environment variable is not set");
   if (!apiKey) throw new N8nClientError("N8N_API_KEY environment variable is not set");
 
   return { baseUrl, apiKey };

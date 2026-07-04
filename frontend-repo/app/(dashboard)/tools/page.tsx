@@ -14,8 +14,12 @@ import styles from './tools.module.css';
 type StatusFilter = 'all' | 'active' | 'inactive' | 'error' | 'syncing';
 
 export default function ToolsPage() {
-  const { tools, setTools, updateTool, isLoading, setLoading } = useToolStore();
-  const { addToast } = useUIStore();
+  const tools = useToolStore(s => s.tools);
+  const setTools = useToolStore(s => s.setTools);
+  const updateTool = useToolStore(s => s.updateTool);
+  const isLoading = useToolStore(s => s.isLoading);
+  const setLoading = useToolStore(s => s.setLoading);
+  const addToast = useUIStore(s => s.addToast);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<StatusFilter>('all');
   const [testingId, setTestingId] = useState<string | null>(null);

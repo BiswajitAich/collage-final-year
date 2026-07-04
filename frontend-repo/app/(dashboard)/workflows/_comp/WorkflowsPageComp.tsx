@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Search, Zap, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { workflowService } from '@/lib/api/services';
@@ -28,26 +28,30 @@ export type WorkflowListDTO = {
 
 export default function WorkflowsPageComp({ workflowsData }: { workflowsData: WorkflowListDTO[] | null }) {
     const router = useRouter();
-    const { isLoading, setLoading } = useWorkflowStore();
+    const isLoading = useWorkflowStore(s => s.isLoading);
+    const setLoading = useWorkflowStore(s => s.setLoading);
     const [search, setSearch] = useState('');
     const [statusFilter, setStatusFilter] = useState<StatusFilter>('ALL');
     const [workflows, setWorkflows] = useState<WorkflowListDTO[] | null>(workflowsData ?? null);
 
 
-    const filtered = workflows?.filter((w) => {
-        const matchSearch = !search || w.name.toLowerCase().includes(search.toLowerCase()) || w.description?.toLowerCase().includes(search.toLowerCase());
-        const matchStatus = statusFilter === 'ALL' || w.status === statusFilter;
-        return matchSearch && matchStatus;
-    });
+    const filtered = useMemo(() =>
+        workflows?.filter((w) => {
+            const matchSearch = !search || w.name.toLowerCase().includes(search.toLowerCase()) || w.description?.toLowerCase().includes(search.toLowerCase());
+            const matchStatus = statusFilter === 'ALL' || w.status === statusFilter;
+            return matchSearch && matchStatus;
+        }),
+        [workflows, search, statusFilter]
+    );
 
-    const statusCounts = {
+    const statusCounts = useMemo(() => ({
         ALL: workflows?.length,
         ACTIVE: workflows?.filter((w) => w.status === 'ACTIVE').length,
         PENDING_REVIEW: workflows?.filter((w) => w.status === 'PENDING_REVIEW').length,
         DRAFT: workflows?.filter((w) => w.status === 'DRAFT').length,
         FAILED: workflows?.filter((w) => w.status === 'FAILED').length,
         INACTIVE: workflows?.filter((w) => w.status === 'INACTIVE').length,
-    };
+    }), [workflows]);
 
     const columns: TableColumn<WorkflowListDTO>[] = [
         {

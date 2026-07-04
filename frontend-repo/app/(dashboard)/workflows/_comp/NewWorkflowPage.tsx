@@ -104,11 +104,12 @@ export default function NewWorkflowPage({
   capabilityId,
 }: Props) {
   const router = useRouter();
-  const { schemas } = useSchemaStore();
-  const { addToast } = useUIStore();
+  const schemas = useSchemaStore(s => s.schemas);
+  const addToast = useUIStore(s => s.addToast);
 
   const [generatedWorkflow, setGeneratedWorkflow] = useState<WorkflowGraphData | null>(workflow ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
 
   const allEntities = Array.from(
     new Set([
@@ -210,8 +211,17 @@ export default function NewWorkflowPage({
       addToast({ type: 'warning', title: 'Workflow id not found !' });
       return;
     }
-    await addWorkflowToN8n(idToUse);
-    addToast({ type: 'success', title: 'Workflow approved & saved' });
+    setIsDeploying(true);
+    addToast({ type: 'info', title: 'Deploying to n8n…', message: 'Compiling and creating workflow.' });
+    try {
+      await addWorkflowToN8n(idToUse);
+      addToast({ type: 'success', title: 'Deployed!', message: 'Workflow approved & saved to n8n.' });
+    } catch (error) {
+      console.error('[UI ERROR] Deploy failed:', error);
+      addToast({ type: 'error', title: 'Deploy failed', message: error instanceof Error ? error.message : 'Unknown error' });
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   // const hasGraph = (generatedWorkflow?.graph?.nodes?.length ?? 0) > 0;
@@ -569,8 +579,9 @@ export default function NewWorkflowPage({
                   variant="primary"
                   leftIcon={<Check size={14} />}
                   onClick={handleApprove}
+                  isLoading={isDeploying}
                 >
-                  Approve &amp; Test on n8n
+                  {isDeploying ? 'Deploying…' : 'Approve &amp; Test on n8n'}
                 </Button>
               </div>
             </div>
