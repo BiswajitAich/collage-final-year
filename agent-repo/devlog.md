@@ -96,7 +96,45 @@ Two processes (started by `start.sh`):
 
 ---
 
-## Fixes Applied
+## Latest Fixes (2026-07-04)
+
+### 1. Prompt leaking fixed
+**Problem:** Agent was repeating the system prompt back to the user (e.g., "I am a friendly, reliable voice assistant...").
+**Root cause:** The prompt was too verbose with markdown headers (`# Output rules`, `# Guardrails`, etc.) — the LLM treated it as conversation text.
+**Fix:** Rewrote to 8 terse lines in `prompts.py`:
+- No headers, no fluff, no "Output rules" sections
+- Just: who you help, what you know, what to do when asked, never ask for ID
+- `{{tools_summary}}` still renders the actual tool list
+
+### 2. Function tool names leaking into conversation
+**Problem:** LLM treated function names as conversation text. User asked "who am I" → agent said "who I am" back.
+**Fix:** Renamed to natural descriptions:
+- `who_am_i` → `get_call_info` ("Return who is calling — name, user ID, phone number.")
+- `list_available_tools` → `list_tools` ("Return the list of tools the assistant can run.")
+- `run_registered_tool` → `run_tool` ("Run one of the available tools by name. Pass parameters as JSON.")
+
+### 3. Tools now properly fetched from the `app` database
+**Problem:** The agent's `/agent/tools` endpoint was querying the `n8n` database for the `Workflow` table (which lives in the `app` database), so DB fetch failed silently.
+**Root cause:** `APP_DATABASE_URL` was either unset or fell back to `DATABASE_URL` (the n8n database).
+**Fixes:**
+- `config.py`: `APP_DATABASE_URL` no longer falls back to `DATABASE_URL` — empty means "don't query DB"
+- `agent.py` (`_fetch_from_db`): returns empty list if `APP_DATABASE_URL` is not set, wrapped in try/except with a log warning
+- Agent now gracefully handles zero tools (no crash, generic greeting)
+- User must set `APP_DATABASE_URL` in `agent-repo/.env`:
+  ```
+  APP_DATABASE_URL=postgresql+asyncpg://admin:admin123@localhost:5432/app
+  ```
+  (same as frontend's Prisma `DATABASE_URL` but with `+asyncpg`)
+
+### 4. Auto-inject customer_id in tool calls
+`run_tool` fills in `customer_id` from call metadata if the payload is missing it — the LLM never needs to ask.
+
+### 5. on_enter auto-looks up customer
+If the `customers-details` tool is registered, the agent pre-fetches customer info on call start and uses it in the greeting. If lookup fails or no tools exist, it falls back to a generic greeting.
+
+---
+
+## Fixes Applied (previous)
 
 ### 1. Agent silent on calls (HIGH PRIORITY — STILL TESTING)
 

@@ -1,11 +1,14 @@
+import logging
 import re
 from typing import Any, Optional
 from urllib.parse import urlsplit, urlunsplit
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import text
-from app.config import USE_MOCK_TOOLS
-from app.database import SessionLocal
+from app.config import APP_DATABASE_URL, USE_MOCK_TOOLS
+from app.database import AppSessionLocal
+
+logger = logging.getLogger("agent")
 
 router = APIRouter(prefix="/agent", tags=["agent"])
 
@@ -62,26 +65,34 @@ def _normalize_webhook_url(url: Optional[str]) -> Optional[str]:
 
 
 async def _fetch_from_db() -> list[WorkflowTool]:
-    async with SessionLocal() as session:
-        result = await session.execute(
-            text(
-                """
-                SELECT
-                    id,
-                    name,
-                    description,
-                    purpose,
-                    "httpMethod",
-                    endpoint,
-                    "n8nWebhookUrl"
-                FROM "Workflow"
-                WHERE status = 'ACTIVE'
-                  AND COALESCE("n8nWebhookUrl", endpoint) IS NOT NULL
-                ORDER BY "createdAt" DESC
-                """
+    if not APP_DATABASE_URL:
+        logger.warning("APP_DATABASE_URL not set — cannot fetch tools from database")
+        return []
+
+    async with AppSessionLocal() as session:
+        try:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT
+                        id,
+                        name,
+                        description,
+                        purpose,
+                        "httpMethod",
+                        endpoint,
+                        "n8nWebhookUrl"
+                    FROM "Workflow"
+                    WHERE status = 'ACTIVE'
+                      AND COALESCE("n8nWebhookUrl", endpoint) IS NOT NULL
+                    ORDER BY "createdAt" DESC
+                    """
+                )
             )
-        )
-        rows = result.mappings().all()
+            rows = result.mappings().all()
+        except Exception as e:
+            logger.warning("Failed to fetch tools from DB: %s", e)
+            return []
 
     return [
         WorkflowTool(
