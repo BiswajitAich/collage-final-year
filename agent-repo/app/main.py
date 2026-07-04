@@ -7,6 +7,7 @@ from sqlalchemy import text
 
 from app.config import FRONTEND_ORIGINS
 from app.database import SessionLocal, engine
+from app.models import Base
 from app.routers import agent, rooms, webhook
 
 logging.basicConfig(
@@ -18,9 +19,11 @@ logger = logging.getLogger("main")
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
     async with SessionLocal() as session:
         await session.execute(text("SELECT 1"))
-    logger.info("✓ Database connection verified")
+    logger.info("✓ Database tables created / verified")
     yield
     await engine.dispose()
     logger.info("Database engine disposed")

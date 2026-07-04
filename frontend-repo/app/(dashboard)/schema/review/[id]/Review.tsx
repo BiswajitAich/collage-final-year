@@ -2,8 +2,11 @@
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-import ReactFlow, { Background, Controls, BackgroundVariant, Node, Edge, MarkerType } from 'reactflow';
+import type { Node, Edge } from 'reactflow';
+import { Background, Controls, BackgroundVariant, MarkerType } from 'reactflow';
 import 'reactflow/dist/style.css';
+import dynamic from 'next/dynamic';
+const ReactFlow = dynamic(() => import('reactflow').then(m => m.default), { ssr: false });
 import { CheckCircle2, XCircle, RefreshCw, BrainCircuit, Layers, Link2, Lightbulb, ChevronRight, Bot } from 'lucide-react';
 // import { schemaService } from '@/lib/api/services';
 import { useSchemaStore, useUIStore } from '@/stores';
@@ -52,8 +55,12 @@ export default function SchemaReview({ schema }: { schema: UploadedSchema }) {
 
     const handleApprove = () => {
         addToast({ type: 'success', title: 'Schema approved', message: 'Proceeding to workflow generation.' });
-        // router.push('/');
-        return
+        const firstCapability = llmReview?.capabilities?.[0];
+        if (firstCapability) {
+            router.push(`/workflows/new/${schema.id}/${firstCapability.id}`);
+        } else {
+            router.push(`/schema/review/${schema.id}`);
+        }
     };
 
     const handleReject = () => {
@@ -120,7 +127,7 @@ export default function SchemaReview({ schema }: { schema: UploadedSchema }) {
             const color = edgeColor[rel.type] ?? "#6366f1";
 
             return {
-                id: `${rel.fieldName}-${rel.toEntity}-${rel.fieldName}`,
+                id: `${rel.fromEntity}-${rel.toEntity}-${rel.fieldName}-${rel.type}`,
                 source: source?.id ?? rel.fromEntity,
                 target: target?.id ?? rel.toEntity,
                 label: edgeMap[rel.type] ?? rel.type,
@@ -176,12 +183,16 @@ export default function SchemaReview({ schema }: { schema: UploadedSchema }) {
                         <Button variant="secondary" size="sm" leftIcon={<RefreshCw size={14} />} isLoading={isAnalyzing || isLoading} onClick={refreshSchemasById}>
                             Refresh
                         </Button>
-                        <Button variant="danger" size="sm" leftIcon={<XCircle size={14} />} onClick={handleReject}>
-                            Reject
-                        </Button>
-                        <Button variant="success" size="sm" leftIcon={<CheckCircle2 size={14} />} onClick={handleApprove}>
-                            Approve & Generate
-                        </Button>
+                        {llmReview && (
+                            <>
+                                <Button variant="danger" size="sm" leftIcon={<XCircle size={14} />} onClick={handleReject}>
+                                    Reject
+                                </Button>
+                                <Button variant="success" size="sm" leftIcon={<CheckCircle2 size={14} />} onClick={handleApprove}>
+                                    Approve & Generate
+                                </Button>
+                            </>
+                        )}
                     </>
                 }
             />
@@ -365,14 +376,22 @@ export default function SchemaReview({ schema }: { schema: UploadedSchema }) {
                             </ul>
                         </div>
 
-                        <div className={styles.approvalActions}>
-                            <Button variant="danger" fullWidth leftIcon={<XCircle size={14} />} onClick={handleReject}>
-                                Reject Schema
-                            </Button>
-                            <Button variant="success" fullWidth leftIcon={<CheckCircle2 size={14} />} onClick={handleApprove}>
-                                Approve & Continue
-                            </Button>
-                        </div>
+                        {!llmReview ? (
+                            <div className={styles.approvalActions}>
+                                <Button variant="primary" fullWidth leftIcon={<Bot size={14} />} isLoading={isAnalyzing} onClick={handleRegenerate}>
+                                    Generate AI Review First
+                                </Button>
+                            </div>
+                        ) : (
+                            <div className={styles.approvalActions}>
+                                <Button variant="danger" fullWidth leftIcon={<XCircle size={14} />} onClick={handleReject}>
+                                    Reject Schema
+                                </Button>
+                                <Button variant="success" fullWidth leftIcon={<CheckCircle2 size={14} />} onClick={handleApprove}>
+                                    Approve & Continue
+                                </Button>
+                            </div>
+                        )}
                     </div>
                 </div>
             )}

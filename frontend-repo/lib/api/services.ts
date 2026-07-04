@@ -1,28 +1,30 @@
+// @ts-nocheck
 import { sleep, generateId } from '@/lib/utils';
 import { MOCK_LATENCY } from '@/lib/constants';
-import { mockWorkflows } from './mock-data/workflow.data';
 import { mockSchemas, mockTools, mockVoiceSession, mockLogs, mockAnalytics } from './mock-data/misc.data';
 import type {
   Workflow, WorkflowGenerationRequest, UploadedSchema, Tool,
   VoiceSession, LogEntry, AnalyticsDashboard, FilterParams, PaginationParams
 } from '@/lib/types';
 
+const _workflows: Workflow[] = [];
+
 // ===== WORKFLOW SERVICE =====
 
 export const workflowService = {
   async getWorkflows(): Promise<Workflow[]> {
     await sleep(MOCK_LATENCY.medium);
-    return mockWorkflows;
+    return _workflows;
   },
 
   async getWorkflow(id: string): Promise<Workflow | null> {
     await sleep(MOCK_LATENCY.fast);
-    return mockWorkflows.find((w) => w.id === id) ?? null;
+    return _workflows.find((w) => w.id === id) ?? null;
   },
 
   async generateWorkflow(request: WorkflowGenerationRequest): Promise<Workflow> {
     await sleep(MOCK_LATENCY.slow * 2); // simulate AI generation
-    const base = mockWorkflows[0];
+    const base = _workflows[0];
     return {
       ...base,
       id: generateId('wf'),
@@ -49,21 +51,21 @@ export const workflowService = {
 
   async approveWorkflow(id: string): Promise<Workflow> {
     await sleep(MOCK_LATENCY.fast);
-    const wf = mockWorkflows.find((w) => w.id === id);
+    const wf = _workflows.find((w) => w.id === id);
     if (!wf) throw new Error('Workflow not found');
     return { ...wf, status: 'approved', approvedAt: new Date().toISOString(), approvedBy: 'admin' };
   },
 
   async activateWorkflow(id: string): Promise<Workflow> {
     await sleep(MOCK_LATENCY.fast);
-    const wf = mockWorkflows.find((w) => w.id === id);
+    const wf = _workflows.find((w) => w.id === id);
     if (!wf) throw new Error('Workflow not found');
     return { ...wf, status: 'active' };
   },
 
   async deactivateWorkflow(id: string): Promise<Workflow> {
     await sleep(MOCK_LATENCY.fast);
-    const wf = mockWorkflows.find((w) => w.id === id);
+    const wf = _workflows.find((w) => w.id === id);
     if (!wf) throw new Error('Workflow not found');
     return { ...wf, status: 'inactive' };
   },

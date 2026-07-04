@@ -33,8 +33,12 @@ const TABS: { id: SettingsTab; label: string; icon: React.ElementType }[] = [
 
 export default function SettingsPage() {
   const [activeTab, setActiveTab] = useState<SettingsTab>('general');
-  const { settings, updateSettings, saveSettings, isDirty, isSaving } = useSettingsStore();
-  const { addToast } = useUIStore();
+  const settings = useSettingsStore(s => s.settings);
+  const updateSettings = useSettingsStore(s => s.updateSettings);
+  const saveSettings = useSettingsStore(s => s.saveSettings);
+  const isDirty = useSettingsStore(s => s.isDirty);
+  const isSaving = useSettingsStore(s => s.isSaving);
+  const addToast = useUIStore(s => s.addToast);
 
   const handleSave = async () => {
     await saveSettings();

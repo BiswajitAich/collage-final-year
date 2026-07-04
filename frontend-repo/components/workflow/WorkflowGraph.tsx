@@ -17,7 +17,7 @@ import ReactFlow, {
 import 'reactflow/dist/style.css';
 import { X } from 'lucide-react';
 
-import { WORKFLOW_NODE_TYPES } from '@/lib/constants';
+import { getDbTools } from '@/app/(dashboard)/tools/action';
 import styles from './WorkflowGraph.module.css';
 import { WorkflowNode, WorkflowEdge } from '@/app/(dashboard)/workflows/workflow.schema';
 
@@ -52,6 +52,17 @@ interface WorkflowGraphProps {
 
 export function WorkflowGraph({ nodes, edges, readonly = false }: WorkflowGraphProps) {
   const [selectedNode, setSelectedNode] = useState<WorkflowNode | null>(null);
+  const [toolMap, setToolMap] = useState<Record<string, { label: string; color: string }>>({});
+
+  useEffect(() => {
+    getDbTools().then(tools => {
+      const map: Record<string, { label: string; color: string }> = {};
+      for (const t of tools) {
+        map[t.name] = { label: t.label, color: t.color };
+      }
+      setToolMap(map);
+    });
+  }, []);
 
   const rfNodes = useMemo<Node[]>(
     () =>
@@ -118,14 +129,14 @@ export function WorkflowGraph({ nodes, edges, readonly = false }: WorkflowGraphP
         <MiniMap
           className={styles.minimap}
           nodeColor={(n) => {
-            const t = (n.data as WorkflowNode)?.type as keyof typeof WORKFLOW_NODE_TYPES;
-            return WORKFLOW_NODE_TYPES[t]?.color ?? '#666';
+            const t = (n.data as WorkflowNode)?.type;
+            return toolMap[t]?.color ?? '#666';
           }}
           maskColor="rgba(8,10,15,0.7)"
         />
 
         <Panel position="top-right" className={styles.legend}>
-          {Object.entries(WORKFLOW_NODE_TYPES).map(([key, val]) => (
+          {Object.entries(toolMap).map(([key, val]) => (
             <div key={key} className={styles.legendItem}>
               <span className={styles.legendDot} style={{ background: val.color }} />
               <span className={styles.legendLabel}>{val.label}</span>

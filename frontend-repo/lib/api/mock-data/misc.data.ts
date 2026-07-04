@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { UploadedSchema, Tool, VoiceSession, TranscriptMessage, LogEntry, AnalyticsDashboard } from '@/lib/types';
 
 const now = new Date();

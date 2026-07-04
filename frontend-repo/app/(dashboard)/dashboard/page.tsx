@@ -16,7 +16,12 @@ import type { RecentActivity, AISuggestion, TimeSeriesDataPoint } from '@/lib/ty
 import styles from './dashboard.module.css';
 
 export default function DashboardPage() {
-  const { stats, recentActivity, aiSuggestions, setStats, setRecentActivity, setAISuggestions } = useDashboardStore();
+  const stats = useDashboardStore(s => s.stats);
+  const recentActivity = useDashboardStore(s => s.recentActivity);
+  const aiSuggestions = useDashboardStore(s => s.aiSuggestions);
+  const setStats = useDashboardStore(s => s.setStats);
+  const setRecentActivity = useDashboardStore(s => s.setRecentActivity);
+  const setAISuggestions = useDashboardStore(s => s.setAISuggestions);
   const [isLoading, setIsLoading] = useState(true);
   const [execSeries, setExecSeries] = useState<TimeSeriesDataPoint[]>([]);
   const [successSeries, setSuccessSeries] = useState<TimeSeriesDataPoint[]>([]);

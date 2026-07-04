@@ -75,7 +75,7 @@ export const generateReview = async (
         if (!SCHEMA_JSON) {
             throw new Error("Schema not send properly!");
         }
-        const { text } = await generateText({
+        const llmPromise = generateText({
             model: groq(GROQ_MODEL),
             output: Output.json(z.object({
                 domain: z.string(),
@@ -88,7 +88,7 @@ export const generateReview = async (
                         description: z.string(),
                         entities: z.array(z.string()),
                         confidence: z.number(),
-                        category: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
+                        category: z.enum(["READ", "CREATE", "UPDATE", "DELETE", "SEARCH", "REPORT", "WORKFLOW"]),
                         suggestedEndpoint: z.string(),
                         suggestedMethod: z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]),
                     })
@@ -111,6 +111,10 @@ export const generateReview = async (
             })),
             prompt: buildReviewAnalysisPrompt(SCHEMA_JSON)
         });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('LLM request timed out after 30s')), 30000)
+        );
+        const { text } = await Promise.race([llmPromise, timeoutPromise]);
         // console.log(JSON.stringify(text), null, 2);
         const analysis: ReviewAnalysis = JSON.parse(text);
         await prisma.uploadedSchema.update({

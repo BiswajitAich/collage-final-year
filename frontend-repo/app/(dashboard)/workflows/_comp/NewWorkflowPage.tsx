@@ -104,11 +104,12 @@ export default function NewWorkflowPage({
   capabilityId,
 }: Props) {
   const router = useRouter();
-  const { schemas } = useSchemaStore();
-  const { addToast } = useUIStore();
+  const schemas = useSchemaStore(s => s.schemas);
+  const addToast = useUIStore(s => s.addToast);
 
   const [generatedWorkflow, setGeneratedWorkflow] = useState<WorkflowGraphData | null>(workflow ?? null);
   const [isGenerating, setIsGenerating] = useState(false);
+  const [isDeploying, setIsDeploying] = useState(false);
 
   const allEntities = Array.from(
     new Set([
@@ -146,7 +147,10 @@ export default function NewWorkflowPage({
     },
   });
 
+  const [savedWorkflowId, setSavedWorkflowId] = useState<string | null>(null);
+
   const onGenerate: SubmitHandler<WorkflowGenerationFormData> = async (data: WorkflowGenerationFormData) => {
+    console.log('[UI CHECKPOINT] onGenerate started', { schemaId, capabilityId });
     if (!schemaId || !capabilityId) {
       addToast({
         type: 'error',
@@ -158,15 +162,14 @@ export default function NewWorkflowPage({
 
     setIsGenerating(true);
     try {
-      // console.log("calling server action");
-
       const wf = await generateWorkFlow({
         ...data,
         schemaId,
         capabilityId,
       });
 
-      // console.log("workflow returned", wf);
+      console.log('[UI CHECKPOINT] Workflow generated, DB id:', wf.id, 'graph id:', (wf as any).id);
+      setSavedWorkflowId(wf.id);
       setGeneratedWorkflow(wf);
 
       addToast({
@@ -175,7 +178,7 @@ export default function NewWorkflowPage({
         message: `AI created "${wf.name}" with ${wf.graph.nodes.length} nodes.`,
       });
     } catch (error) {
-      console.error(error);
+      console.error('[UI ERROR] Generation failed:', error);
       addToast({
         type: 'error',
         title: 'Generation failed',
@@ -185,24 +188,40 @@ export default function NewWorkflowPage({
       setIsGenerating(false);
     }
   };
-  console.log(JSON.stringify(generatedWorkflow, null, 3));
 
   const handleSaveDraft = () => {
     if (!generatedWorkflow) return;
-    // addWorkflow(generatedWorkflow);
     addToast({ type: 'success', title: 'Saved as draft' });
     router.push('/workflows');
   };
 
   const handleApprove = async () => {
-    if (!generatedWorkflow) return;
-    if (!workflowId && !generatedWorkflow?.id) {
+    console.log('[UI CHECKPOINT] handleApprove called');
+    console.log('[UI CHECKPOINT] workflowId prop:', workflowId);
+    console.log('[UI CHECKPOINT] savedWorkflowId (DB id):', savedWorkflowId);
+    console.log('[UI CHECKPOINT] generatedWorkflow?.id (graph id):', (generatedWorkflow as any)?.id);
+
+    if (!generatedWorkflow) {
+      console.log('[UI ERROR] No generated workflow to approve');
+      return;
+    }
+    const idToUse = workflowId || savedWorkflowId;
+    console.log('[UI CHECKPOINT] Using ID for n8n deploy:', idToUse);
+    if (!idToUse) {
       addToast({ type: 'warning', title: 'Workflow id not found !' });
       return;
     }
-    await addWorkflowToN8n(workflowId || generatedWorkflow.id);
-    addToast({ type: 'success', title: 'Workflow approved & saved' });
-    // router.push('/workflows');
+    setIsDeploying(true);
+    addToast({ type: 'info', title: 'Deploying to n8n…', message: 'Compiling and creating workflow.' });
+    try {
+      await addWorkflowToN8n(idToUse);
+      addToast({ type: 'success', title: 'Deployed!', message: 'Workflow approved & saved to n8n.' });
+    } catch (error) {
+      console.error('[UI ERROR] Deploy failed:', error);
+      addToast({ type: 'error', title: 'Deploy failed', message: error instanceof Error ? error.message : 'Unknown error' });
+    } finally {
+      setIsDeploying(false);
+    }
   };
 
   // const hasGraph = (generatedWorkflow?.graph?.nodes?.length ?? 0) > 0;
@@ -561,8 +580,9 @@ export default function NewWorkflowPage({
                   variant="primary"
                   leftIcon={<Check size={14} />}
                   onClick={handleApprove}
+                  isLoading={isDeploying}
                 >
-                  Approve &amp; Test on n8n
+                  {isDeploying ? 'Deploying…' : 'Approve &amp; Test on n8n'}
                 </Button>
               </div>
             </div>

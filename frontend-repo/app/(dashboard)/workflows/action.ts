@@ -3,6 +3,7 @@
 import { getUser } from "@/app/(auth)/login/action"
 import prisma from "@/lib/prisma"
 import { graphToN8n } from "@/lib/workflow"
+import { getDbTools } from "@/app/(dashboard)/tools/action"
 import { cacheLife, cacheTag } from "next/cache"
 import { WorkflowGraphData } from "./workflow.schema"
 
@@ -32,12 +33,39 @@ export async function getWorkFlows() {
     if (!user?.id) { return null; }
     return await cacheHelper(user.id);
 }
+export async function getWorkflowById(id: string) {
+    return await prisma.workflow.findUnique({
+        where: { id },
+        select: {
+            id: true,
+            name: true,
+            description: true,
+            status: true,
+            endpoint: true,
+            httpMethod: true,
+            endpointType: true,
+            requiresAuth: true,
+            generationMode: true,
+            executionCount: true,
+            successRate: true,
+            avgLatencyMs: true,
+            n8nWorkflowId: true,
+            workflowJson: true,
+            createdAt: true,
+            updatedAt: true,
+        }
+    });
+}
 export async function addWorkflowToN8n(id: string) {
+    console.log('[CHECKPOINT 1] addWorkflowToN8n called with id:', id);
     if (!id) {
+        console.log('[ERROR] Id not received!');
         throw new Error("Id not received!")
     }
     const n8nUrl = process.env.N8N_URL;
+    console.log('[CHECKPOINT 2] N8N_URL from env:', n8nUrl);
     if (!n8nUrl) {
+        console.log('[ERROR] n8n url incorrect!');
         throw new Error("n8n url incorrect!");
     }
     const baseUrl = n8nUrl.replace(/\/$/, "");
@@ -58,16 +86,26 @@ export async function addWorkflowToN8n(id: string) {
             where: { id },
             select: { workflowJson: true, n8nWorkflowId: true }
         });
-        console.log("workflow\n\n\n", JSON.stringify(workflow, null, 2));
+        console.log('[CHECKPOINT 3] DB workflow lookup:', JSON.stringify(workflow, null, 2));
 
         if (!workflow?.workflowJson) {
+            console.log('[ERROR] workflow?.workflowJson is null/falsy');
             throw new Error('workflow?.workflowJson mismatch!')
         }
+        const tools = await getDbTools();
         const compiled = graphToN8n(
-            workflow.workflowJson as WorkflowGraphData
+            workflow.workflowJson as WorkflowGraphData,
+            tools
         );
+        console.log('[CHECKPOINT 4] graphToN8n result:', JSON.stringify({
+            success: compiled.success,
+            errors: compiled.errors,
+            warnings: compiled.warnings,
+            nodeCount: compiled.workflow?.nodes?.length,
+        }, null, 2));
 
         if (!compiled.success || !compiled.workflow) {
+            console.log('[ERROR] Compilation failed:', compiled.errors?.join(", "));
             throw new Error(
                 compiled.errors?.join(", ") ?? "Compilation failed"
             );
@@ -78,17 +116,25 @@ export async function addWorkflowToN8n(id: string) {
             connections: compiled.workflow.connections,
             settings: compiled.workflow.settings,
         };
+        console.log('[CHECKPOINT 5] Compiled payload ready:', JSON.stringify({
+            name: payload.name,
+            nodeCount: payload.nodes.length,
+            hasConnections: Object.keys(payload.connections).length > 0,
+        }, null, 2));
+
         if (workflow?.n8nWorkflowId) {
+            console.log('[CHECKPOINT 5a] Updating existing n8n workflow:', workflow.n8nWorkflowId);
             res = await fetch(
                 `${baseUrl}/api/v1/workflows/${workflow.n8nWorkflowId}`,
                 {
-                    method: "PUT",
+                    method: "PATCH",
                     headers,
                     body: JSON.stringify(payload),
                     signal: controller.signal
                 }
             );
         } else {
+            console.log('[CHECKPOINT 5b] Creating new workflow in n8n');
             res = await fetch(`${baseUrl}/api/v1/workflows`, {
                 method: "POST",
                 headers,
@@ -97,24 +143,52 @@ export async function addWorkflowToN8n(id: string) {
             });
         }
 
+        console.log('[CHECKPOINT 6] n8n API response status:', res.status, res.statusText);
+
         if (!res.ok) {
             const text = await res.text();
-
+            console.log('[ERROR] n8n API error:', res.status, text);
             throw new Error(
                 `N8N API Error (${res.status}): ${text}`
             );
         }
         const data = await res.json();
+        console.log('[CHECKPOINT 7] n8n response data:', JSON.stringify({
+            id: data.id,
+            name: data.name,
+            nodeCount: data.nodes?.length,
+            hasWebhook: data.nodes?.some((n: any) => n.type === "n8n-nodes-base.webhook"),
+        }, null, 2));
+
+        const hasWebhookNode = data.nodes?.some(
+            (node: any) => node.type === "n8n-nodes-base.webhook"
+        );
         const webhookNode = data.nodes?.find(
             (node: any) => node.type === "n8n-nodes-base.webhook"
         );
         const webhookPath = webhookNode?.parameters?.path ?? null;
-        console.log(data);
+        console.log('[CHECKPOINT 8] webhookPath:', webhookPath, 'hasWebhookNode:', hasWebhookNode);
 
         createdWorkflowId = data.id;
-        if (!data || !createdWorkflowId || !webhookPath) {
+        if (!data || !createdWorkflowId) {
+            console.log('[ERROR] Missing workflow id in n8n response');
             throw new Error(`N8N workflow creation error: ${JSON.stringify(data)}`);
         }
+        if (hasWebhookNode && !webhookPath) {
+            console.log('[ERROR] Webhook node present but missing path');
+            throw new Error('Webhook node is missing the path parameter');
+        }
+
+        // Deactivate before updating if this is a re-deploy
+        if (workflow?.n8nWorkflowId) {
+            console.log('[CHECKPOINT 8b] Deactivating existing workflow before update');
+            await fetch(
+                `${baseUrl}/api/v1/workflows/${workflow.n8nWorkflowId}/deactivate`,
+                { method: "POST", headers, signal: controller.signal }
+            ).catch(() => console.log('[INFO] Deactivate skipped — maybe already inactive'));
+        }
+
+        console.log('[CHECKPOINT 9] Activating workflow:', createdWorkflowId);
         const activateRes = await fetch(
             `${baseUrl}/api/v1/workflows/${createdWorkflowId}/activate`,
             {
@@ -123,10 +197,13 @@ export async function addWorkflowToN8n(id: string) {
                 signal: controller.signal,
             }
         );
+        console.log('[CHECKPOINT 10] Activation response:', activateRes.status, activateRes.statusText);
         if (!activateRes.ok) {
             const activateResText = await activateRes.text();
+            console.log('[ERROR] Activation failed:', activateResText);
             throw new Error("Activation failed" + activateResText);
         }
+        console.log('[CHECKPOINT 11] Updating DB record:', id);
         await prisma.workflow.update({
             where: { id },
             data: {
@@ -138,8 +215,23 @@ export async function addWorkflowToN8n(id: string) {
                 status: 'ACTIVE',
             }
         });
+        // Create WorkflowVersion record for history
+        const latestVersion = await prisma.workflowVersion.findFirst({
+            where: { workflowId: id },
+            orderBy: { version: 'desc' },
+        });
+        await prisma.workflowVersion.create({
+            data: {
+                workflowId: id,
+                version: (latestVersion?.version ?? 0) + 1,
+                workflowJson: workflow?.workflowJson as any ?? {},
+            },
+        });
+        console.log('[CHECKPOINT 12] Workflow deployment complete!');
     } catch (error) {
+        console.log('[ERROR] Caught in addWorkflowToN8n:', error instanceof Error ? error.message : error);
         if (!workflow?.n8nWorkflowId && createdWorkflowId) {
+            console.log('[CLEANUP] Deleting newly created n8n workflow:', createdWorkflowId);
             await fetch(
                 `${baseUrl}/api/v1/workflows/${createdWorkflowId}`,
                 {
@@ -153,6 +245,7 @@ export async function addWorkflowToN8n(id: string) {
         throw error;
     } finally {
         clearTimeout(timeout);
+        console.log('[CHECKPOINT 13] addWorkflowToN8n finished');
     }
 }
 

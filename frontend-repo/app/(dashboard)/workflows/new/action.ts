@@ -3,11 +3,13 @@
 import { getUser } from "@/app/(auth)/login/action";
 import { GROQ_MODEL } from "@/lib/ai/llm";
 import { buildWorkflowPrompt } from "@/lib/ai/prompt";
+import { getDbTools } from "@/app/(dashboard)/tools/action";
 import prisma from "@/lib/prisma";
 import { WorkflowGenerationFormData } from "@/lib/validators";
 import { groq } from "@ai-sdk/groq";
 import { Prisma } from '@/lib/generated/prisma/client';
 import { generateText, Output } from "ai";
+import { revalidateTag } from "next/cache";
 import z from "zod";
 import { WorkflowGraphData, WorkflowGraphSchema } from "../workflow.schema";
 import { Workflow } from "@/lib/types";
@@ -25,14 +27,18 @@ type GenerateWorkflowInput = WorkflowGenerationFormData & {
 export async function generateWorkFlow(
     input: GenerateWorkflowInput
 ): Promise<GeneratedWorkflow> {
+    console.log('[GENERATE CHECKPOINT 1] generateWorkFlow called', { name: input.name, schemaId: input.schemaId, capabilityId: input.capabilityId });
     const user = await getUser();
 
     if (!user?.id) {
+        console.log('[GENERATE ERROR] No user id found');
         throw new Error('No user id found!');
     }
+    console.log('[GENERATE CHECKPOINT 2] User authenticated:', user.id);
 
     const name = input.name.trim();
     if (!name) {
+        console.log('[GENERATE ERROR] Workflow name is required');
         throw new Error('Workflow name is required.');
     }
 
@@ -52,18 +58,34 @@ export async function generateWorkFlow(
     let generatedGraph: z.infer<typeof WorkflowGraphSchema> | null = null;
 
     try {
-        const { text } = await generateText({
+        console.log('[GENERATE CHECKPOINT 3] Calling LLM (Groq) for workflow generation');
+        const dbTools = await getDbTools();
+        const llmPromise = generateText({
             model: groq(GROQ_MODEL),
             output: Output.json(WorkflowGraphSchema),
-            prompt: buildWorkflowPrompt(workflowJson),
+            prompt: buildWorkflowPrompt(workflowJson, dbTools.map(t => t.name)),
         });
+        const timeoutPromise = new Promise<never>((_, reject) =>
+            setTimeout(() => reject(new Error('LLM request timed out after 30s')), 30000)
+        );
+        const { text } = await Promise.race([llmPromise, timeoutPromise]);
+        console.log('[GENERATE CHECKPOINT 4] LLM response received, length:', text.length);
         generatedGraph = JSON.parse(text) as z.infer<typeof WorkflowGraphSchema>;
+        console.log('[GENERATE CHECKPOINT 5] Parsed graph:', {
+            id: generatedGraph.id,
+            description: generatedGraph.description,
+            nodeCount: generatedGraph.graph?.nodes?.length,
+            edgeCount: generatedGraph.graph?.edges?.length,
+        });
     } catch (error) {
         workflowErr = error instanceof Error ? error : new Error(String(error));
+        console.log('[GENERATE ERROR] LLM/parse failed:', workflowErr.message);
     }
     if (!generatedGraph) {
+        console.log('[GENERATE ERROR] No graph generated');
         throw workflowErr ?? new Error("Workflow generation failed");
     }
+    console.log('[GENERATE CHECKPOINT 6] Upserting workflow to DB');
     const workflow = await prisma.workflow.upsert({
         where: {
             schemaId_capabilityId: {
@@ -101,7 +123,10 @@ export async function generateWorkFlow(
             workflowJson: generatedGraph as Prisma.InputJsonValue,
         },
     });
+    console.log('[GENERATE CHECKPOINT 7] Workflow upserted, DB id:', workflow.id);
+    revalidateTag(`get-workflow-${user.id}`, "max");
 
+    console.log('[GENERATE CHECKPOINT 8] Creating WorkflowExecution record');
     await prisma.workflowExecution.create({
         data: {
             workflowId: workflow.id,
@@ -114,6 +139,7 @@ export async function generateWorkFlow(
             errorMessage: workflowErr?.message ?? null,
         },
     });
+    console.log('[GENERATE CHECKPOINT 9] Done, returning workflow');
 
     return {
         ...workflow,

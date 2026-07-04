@@ -17,6 +17,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { graphToN8n } from "@/lib/workflow/compiler";
 import { deployToN8n, N8nClientError } from "@/lib/workflow/n8n-client";
+import { getDbTools } from "@/app/(dashboard)/tools/action";
 import { WorkflowGraphData } from "@/app/(dashboard)/workflows/workflow.schema";
 // import type { WorkflowIR } from "@/lib/workflow/types";
 
@@ -48,7 +49,8 @@ export async function POST(req: NextRequest) {
   }
 
   // ── Compile ────────────────────────────────────────────────────────────────
-  const compileResult = graphToN8n(ir);
+  const tools = await getDbTools();
+  const compileResult = graphToN8n(ir, tools);
 
   if (!compileResult.success || !compileResult.workflow) {
     return NextResponse.json(

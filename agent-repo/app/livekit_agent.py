@@ -257,8 +257,9 @@ async def entrypoint(ctx: JobContext):
             # language="en-US",
         ),
         vad=ctx.proc.userdata["vad"],
-        preemptive_generation=False,
-        # preemptive_generation=True,
+        turn_handling={
+            "preemptive_generation": {"enabled": True},
+        },
     )
 
     await session.start(

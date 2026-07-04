@@ -12,10 +12,10 @@ import type { N8nWorkflow, N8nCreateWorkflowResponse, N8nDeployResult } from "./
 // ─────────────────────────────────────────────────────────────────────────────
 
 function getConfig(): { baseUrl: string; apiKey: string } {
-  const baseUrl = process.env.N8N_BASE_URL?.replace(/\/$/, "");
+  const baseUrl = (process.env.N8N_BASE_URL || process.env.N8N_URL)?.replace(/\/$/, "");
   const apiKey = process.env.N8N_API_KEY;
 
-  if (!baseUrl) throw new N8nClientError("N8N_BASE_URL environment variable is not set");
+  if (!baseUrl) throw new N8nClientError("N8N_BASE_URL or N8N_URL environment variable is not set");
   if (!apiKey) throw new N8nClientError("N8N_API_KEY environment variable is not set");
 
   return { baseUrl, apiKey };
@@ -65,6 +65,7 @@ async function assertOk(res: Response, context: string): Promise<void> {
 export async function createN8nWorkflow(
   workflow: N8nWorkflow
 ): Promise<N8nCreateWorkflowResponse> {
+  console.log('[N8N-CLIENT] createN8nWorkflow called, name:', workflow.name, 'nodes:', workflow.nodes.length);
   const { baseUrl, apiKey } = getConfig();
 
   const res = await fetch(`${baseUrl}/api/v1/workflows`, {
@@ -73,8 +74,11 @@ export async function createN8nWorkflow(
     body: JSON.stringify(workflow),
   });
 
+  console.log('[N8N-CLIENT] create response:', res.status, res.statusText);
   await assertOk(res, "createWorkflow");
-  return res.json() as Promise<N8nCreateWorkflowResponse>;
+  const data = await res.json();
+  console.log('[N8N-CLIENT] create success, workflow id:', data.id);
+  return data as N8nCreateWorkflowResponse;
 }
 
 /**
@@ -85,6 +89,7 @@ export async function updateN8nWorkflow(
   workflowId: string,
   workflow: N8nWorkflow
 ): Promise<N8nCreateWorkflowResponse> {
+  console.log('[N8N-CLIENT] updateN8nWorkflow called, workflowId:', workflowId, 'name:', workflow.name);
   const { baseUrl, apiKey } = getConfig();
 
   const res = await fetch(`${baseUrl}/api/v1/workflows/${workflowId}`, {
@@ -93,8 +98,11 @@ export async function updateN8nWorkflow(
     body: JSON.stringify(workflow),
   });
 
+  console.log('[N8N-CLIENT] update response:', res.status, res.statusText);
   await assertOk(res, "updateWorkflow");
-  return res.json() as Promise<N8nCreateWorkflowResponse>;
+  const data = await res.json();
+  console.log('[N8N-CLIENT] update success, workflow id:', data.id);
+  return data as N8nCreateWorkflowResponse;
 }
 
 /**
@@ -102,6 +110,7 @@ export async function updateN8nWorkflow(
  * Makes the workflow listen for real requests.
  */
 export async function activateN8nWorkflow(workflowId: string): Promise<void> {
+  console.log('[N8N-CLIENT] activateN8nWorkflow, id:', workflowId);
   const { baseUrl, apiKey } = getConfig();
 
   const res = await fetch(`${baseUrl}/api/v1/workflows/${workflowId}/activate`, {
@@ -109,6 +118,7 @@ export async function activateN8nWorkflow(workflowId: string): Promise<void> {
     headers: baseHeaders(apiKey),
   });
 
+  console.log('[N8N-CLIENT] activate response:', res.status, res.statusText);
   await assertOk(res, "activateWorkflow");
 }
 
@@ -116,6 +126,7 @@ export async function activateN8nWorkflow(workflowId: string): Promise<void> {
  * POST /api/v1/workflows/:id/deactivate
  */
 export async function deactivateN8nWorkflow(workflowId: string): Promise<void> {
+  console.log('[N8N-CLIENT] deactivateN8nWorkflow, id:', workflowId);
   const { baseUrl, apiKey } = getConfig();
 
   const res = await fetch(`${baseUrl}/api/v1/workflows/${workflowId}/deactivate`, {
@@ -123,6 +134,7 @@ export async function deactivateN8nWorkflow(workflowId: string): Promise<void> {
     headers: baseHeaders(apiKey),
   });
 
+  console.log('[N8N-CLIENT] deactivate response:', res.status, res.statusText);
   await assertOk(res, "deactivateWorkflow");
 }
 
@@ -166,6 +178,7 @@ export async function deployToN8n(
   workflow: N8nWorkflow,
   options: DeployOptions = {}
 ): Promise<N8nDeployResult> {
+  console.log('[N8N-CLIENT] deployToN8n called, name:', workflow.name, 'options:', JSON.stringify(options));
   const { baseUrl } = getConfig();
   const { activate = false, existingWorkflowId } = options;
 
@@ -173,16 +186,20 @@ export async function deployToN8n(
   let created: N8nCreateWorkflowResponse;
 
   if (existingWorkflowId) {
+    console.log('[N8N-CLIENT] deployToN8n: updating existing workflow:', existingWorkflowId);
     created = await updateN8nWorkflow(existingWorkflowId, workflow);
   } else {
+    console.log('[N8N-CLIENT] deployToN8n: creating new workflow');
     created = await createN8nWorkflow(workflow);
   }
 
   // ── Activate (optional) ───────────────────────────────────────────────────
   if (activate) {
+    console.log('[N8N-CLIENT] deployToN8n: activating workflow:', created.id);
     await activateN8nWorkflow(created.id);
   }
 
+  console.log('[N8N-CLIENT] deployToN8n complete, workflowId:', created.id);
   return {
     workflowId: created.id,
     workflowUrl: `${baseUrl}/workflow/${created.id}`,

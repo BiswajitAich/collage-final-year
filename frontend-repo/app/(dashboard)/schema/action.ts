@@ -79,6 +79,19 @@ console.log(parsed);
       };
     }
 
+    // Ensure user exists in DB (session may have user ID from old database)
+    await prisma.user.upsert({
+      where: { id: user.id },
+      create: {
+        id: user.id,
+        email: user.email,
+        name: user.name,
+        role: user.role as any,
+        passwordHash: "",
+      },
+      update: {},
+    });
+
     let schemaId: string | null = null;
     let persistenceError: string | null = null;
 
@@ -101,17 +114,22 @@ console.log(parsed);
 
       schemaId = schemaRecord.id;
     } catch (error) {
-      persistenceError =
-        error instanceof Error
-          ? error.message
-          : "Parsed successfully but failed to save schema";
+      return {
+        success: false as const,
+        parsed: null,
+        schemaId: null,
+        error:
+          error instanceof Error
+            ? error.message
+            : "Parsed successfully but failed to save schema",
+      };
     }
 
     return {
       success: true as const,
       parsed,
       schemaId,
-      error: persistenceError,
+      error: null,
     };
   } catch (error) {
     return {
