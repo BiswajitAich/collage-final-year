@@ -64,17 +64,6 @@ export const LOG_LEVEL_COLORS: Record<string, string> = {
   success: 'success',
 };
 
-export const WORKFLOW_NODE_TYPES = {
-  webhook: { label: 'Webhook', color: '#00c8f8' },
-  validation: { label: 'Validation', color: '#f5a623' },
-  'business-logic': { label: 'Business Logic', color: '#7c6af7' },
-  database: { label: 'Database Query', color: '#10d48a' },
-  response: { label: 'Response', color: '#5ba4f5' },
-  error: { label: 'Error Handler', color: '#f0455a' },
-  transform: { label: 'Transform', color: '#e879f9' },
-  condition: { label: 'Condition', color: '#f59e0b' },
-} as const;
-
 export const DATE_FORMAT_OPTIONS: SelectOption[] = [
   { value: 'MM/DD/YYYY', label: 'MM/DD/YYYY' },
   { value: 'DD/MM/YYYY', label: 'DD/MM/YYYY' },

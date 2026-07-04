@@ -5,7 +5,7 @@ import type {
   DashboardStats, RecentActivity, AISuggestion, Toast,
   LogEntry, AnalyticsDashboard, AppSettings
 } from '@/lib/types';
-import { WorkflowGraphData } from '@/app/(dashboard)/workflows/new/action';
+import { WorkflowGraphData } from '@/app/(dashboard)/workflows/workflow.schema';
 
 // ===== AUTH STORE =====
 

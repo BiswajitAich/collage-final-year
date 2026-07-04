@@ -36,14 +36,14 @@ export default function WorkflowEditPage() {
       setIsLoading(true);
       const wf = await workflowService.getWorkflow(workflowId);
       if (!wf) { setError('Workflow not found'); setIsLoading(false); return; }
-      setSelectedWorkflow(wf);
+      setSelectedWorkflow(wf as any);
       reset({
         name: wf.name,
-        description: wf.description,
+        description: wf.description ?? undefined,
         endpoint: wf.endpoint,
         httpMethod: wf.httpMethod,
         requiresAuth: wf.requiresAuth,
-        tags: wf.tags,
+        tags: (wf as any).tags ?? [],
         changelog: '',
       });
       setIsLoading(false);
@@ -52,7 +52,8 @@ export default function WorkflowEditPage() {
   }, [workflowId, setSelectedWorkflow, reset]);
 
   const onSubmit = async (data: WorkflowEditFormData) => {
-    updateWorkflow(workflowId, { name: data.name, description: data.description, endpoint: data.endpoint, httpMethod: data.httpMethod, requiresAuth: data.requiresAuth, tags: data.tags, updatedAt: new Date().toISOString() });
+    const { tags, ...updateData } = data;
+    updateWorkflow(workflowId, { ...updateData });
     addToast({ type: 'success', title: 'Workflow saved', message: `Version updated: ${data.changelog}` });
     router.push(`/workflows/${workflowId}`);
   };
@@ -139,11 +140,11 @@ export default function WorkflowEditPage() {
           <div className={styles.sideCard}>
             <h3 className={styles.sideCardTitle}>Current Version</h3>
             <div className={styles.versionInfo}>
-              <span className={styles.versionNum}>v{selectedWorkflow?.currentVersion}</span>
-              <span className={styles.versionDate}>{selectedWorkflow?.updatedAt ? new Date(selectedWorkflow.updatedAt).toLocaleDateString() : '—'}</span>
+              <span className={styles.versionNum}>v{(selectedWorkflow as any)?.currentVersion}</span>
+              <span className={styles.versionDate}>{(selectedWorkflow as any)?.updatedAt ? new Date((selectedWorkflow as any).updatedAt).toLocaleDateString() : '—'}</span>
             </div>
             <div className={styles.versionList}>
-              {selectedWorkflow?.versions.map((v) => (
+              {(selectedWorkflow as any)?.versions?.map((v: any) => (
                 <div key={v.id} className={`${styles.versionItem} ${v.isActive ? styles.versionActive : ''}`}>
                   <span className={styles.versionTag}>v{v.version}</span>
                   <span className={styles.versionNote}>{v.changelog}</span>

@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type {
   DashboardStats, RecentActivity, AISuggestion,
   TimeSeriesDataPoint, SystemHealth
@@ -35,94 +36,7 @@ export const mockDashboardStats: DashboardStats = {
   },
 };
 
-export const mockRecentActivity: RecentActivity[] = [
-  {
-    id: 'act_1',
-    type: 'workflow_executed',
-    title: 'Workflow Executed',
-    description: 'create-order executed successfully (42ms)',
-    timestamp: minutesAgo(2),
-    entityId: 'wf_001',
-    entityName: 'create-order',
-    status: 'active',
-    user: 'system',
-  },
-  {
-    id: 'act_2',
-    type: 'approval_needed',
-    title: 'Approval Required',
-    description: 'update-inventory-batch workflow awaiting review',
-    timestamp: minutesAgo(8),
-    entityId: 'wf_012',
-    entityName: 'update-inventory-batch',
-    status: 'pending',
-    user: 'ai-generator',
-  },
-  {
-    id: 'act_3',
-    type: 'schema_uploaded',
-    title: 'Schema Uploaded',
-    description: 'ecommerce-v2.prisma analyzed — 23 entities detected',
-    timestamp: minutesAgo(34),
-    entityId: 'schema_004',
-    entityName: 'ecommerce-v2.prisma',
-    status: 'active',
-    user: 'sarah.chen@company.com',
-  },
-  {
-    id: 'act_4',
-    type: 'voice_session',
-    title: 'Voice Session',
-    description: 'Customer support session ended — 18 turns, 4 tool calls',
-    timestamp: hoursAgo(1),
-    status: 'active',
-    user: 'voice-agent',
-  },
-  {
-    id: 'act_5',
-    type: 'tool_synced',
-    title: 'Tool Synced',
-    description: 'fetch-product-catalog synced with n8n (v2.1)',
-    timestamp: hoursAgo(2),
-    entityId: 'tool_007',
-    entityName: 'fetch-product-catalog',
-    status: 'active',
-    user: 'system',
-  },
-  {
-    id: 'act_6',
-    type: 'error',
-    title: 'Execution Error',
-    description: 'send-notification failed: Rate limit exceeded',
-    timestamp: hoursAgo(3),
-    entityId: 'wf_019',
-    entityName: 'send-notification',
-    status: 'error',
-    user: 'system',
-  },
-  {
-    id: 'act_7',
-    type: 'workflow_created',
-    title: 'Workflow Generated',
-    description: 'AI generated process-refund workflow (confidence: 94%)',
-    timestamp: hoursAgo(5),
-    entityId: 'wf_047',
-    entityName: 'process-refund',
-    status: 'pending',
-    user: 'ai-generator',
-  },
-  {
-    id: 'act_8',
-    type: 'workflow_executed',
-    title: 'Batch Processing',
-    description: 'sync-user-profiles processed 2,847 records',
-    timestamp: hoursAgo(6),
-    entityId: 'wf_008',
-    entityName: 'sync-user-profiles',
-    status: 'active',
-    user: 'system',
-  },
-];
+export const mockRecentActivity: RecentActivity[] = [];
 
 export const mockAISuggestions: AISuggestion[] = [
   {

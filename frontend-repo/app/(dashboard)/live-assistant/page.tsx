@@ -1,12 +1,13 @@
 'use client';
 import styles from './assistant.module.css';
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { LiveKitRoom } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { PageHeader } from '@/components/ui/UIComponents';
 
-import { FASTAPI_BASE_URL } from './types';
+import { FASTAPI_BASE_URL, DEFAULTS } from './types';
 import type { CallMode, CreateRoomResponse, EndReason } from './types';
+import { getUser } from '@/app/(auth)/login/action';
 import { CallEndedView } from './_components/CallEndedView';
 import { BrowserCallView } from './_components/BrowserCallView';
 import { MobileCallView } from './_components/MobileCallView';
@@ -21,11 +22,26 @@ export default function LiveAssistantPage() {
   // const [micStep, setMicStep] = useState<'idle' | 'requesting' | 'denied'>('idle');
   const [error, setError] = useState<string | null>(null);
 
-  // Pre-filled form values (editable)
-  const [userId, setUserId] = useState('cmpw8nc79000062uts7fdcn6u');
-  const [customerId, setCustomerId] = useState('cust-001');
-  const [name, setName] = useState('Biswajit');
-  const [phoneNumber, setPhoneNumber] = useState('+919876543210');
+  // Form values — userId auto-filled from auth, rest editable
+  const [userId, setUserId] = useState('');
+  const [customerId, setCustomerId] = useState(DEFAULTS.customerId);
+  const [name, setName] = useState('');
+  const [phoneNumber, setPhoneNumber] = useState(DEFAULTS.phoneNumber);
+
+  // Load current user from auth session
+  useEffect(() => {
+    getUser().then((user) => {
+      if (user) {
+        setUserId(user.id);
+        setName(user.name || DEFAULTS.name);
+        if (!customerId) setCustomerId(user.email);
+      } else {
+        // fallback to env defaults if not logged in
+        setUserId(DEFAULTS.userId);
+        setName(DEFAULTS.name);
+      }
+    });
+  }, []);
 
   // ── Start call ─────────────────────────────────────────────────────────────
   async function startCall() {
@@ -161,26 +177,6 @@ export default function LiveAssistantPage() {
             </div>
 
             <div className={styles.fieldGrid}>
-              <div className={styles.field}>
-                <label htmlFor="userId">User ID</label>
-                <input
-                  id="userId"
-                  value={userId}
-                  onChange={e => setUserId(e.target.value)}
-                  placeholder="User ID"
-                  autoComplete="off"
-                />
-              </div>
-              <div className={styles.field}>
-                <label htmlFor="customerId">Customer ID</label>
-                <input
-                  id="customerId"
-                  value={customerId}
-                  onChange={e => setCustomerId(e.target.value)}
-                  placeholder="Customer ID"
-                  autoComplete="off"
-                />
-              </div>
               <div className={styles.field}>
                 <label htmlFor="name">Name</label>
                 <input

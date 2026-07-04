@@ -2,7 +2,7 @@
 
 import { useRef, useState } from 'react';
 import { Upload, FileCode2, Eye, RefreshCw, Database, Code2 } from 'lucide-react';
-// import { schemaService } from '@/lib/api/services';
+// import { schemaService } from '@/lib/api/services');
 import { useSchemaStore, useUIStore } from '@/stores';
 import { PageHeader, StatusBadge, EmptyState, LoadingSkeleton } from '@/components/ui/UIComponents';
 import { Button } from '@/components/ui/Button';
@@ -12,8 +12,7 @@ import type { UploadedSchema, SchemaEntity, TableColumn } from '@/lib/types';
 import styles from '../schema.module.css';
 import { getSchemas, revalidateGetSchemas, uploadSchemaAction } from '../action';
 import dynamic from 'next/dynamic';
-import { atelierForestDark } from 'react-syntax-highlighter/dist/esm/styles/hljs';
-const SyntaxHighlighter = dynamic(() => import('react-syntax-highlighter').then(m => m.default), { ssr: false });
+const SchemaHighlighter = dynamic(() => import('./SchemaHighlighter'), { ssr: false });
 import { mapParsedSchema } from '@/lib/mapper';
 
 export default function SchemaPageComp({ schemasData }: { schemasData: UploadedSchema[] }) {
@@ -309,14 +308,11 @@ export default function SchemaPageComp({ schemasData }: { schemasData: UploadedS
                                         setDisplayRawSchema(!displayRawSchema);
                                     }}>{!displayRawSchema ? "View full" : "View less"}</Button>
                                 </div>
-                                <SyntaxHighlighter
-                                    language={selectedSchema.format.toLowerCase()}
-                                    style={atelierForestDark}
-                                >
+                                <SchemaHighlighter language={selectedSchema.format.toLowerCase()}>
                                     {displayRawSchema
                                         ? selectedSchema.rawContent
                                         : `${selectedSchema.rawContent.slice(0, 800)}...`}
-                                </SyntaxHighlighter>
+                                </SchemaHighlighter>
                             </div>
                         </>
                     )}

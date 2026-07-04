@@ -86,7 +86,7 @@ export default function LogsPage() {
         const isExpanded = expandedId === logRow.id;
         return (
           <div className={styles.messageCell}>
-            <span className={`${styles.message} ${logRow.level === 'error' ? styles.messageError : ''}`}>
+            <span className={`${styles.message} ${String(logRow.level) === 'error' ? styles.messageError : ''}`}>
               {isExpanded ? String(v) : truncate(String(v), 80)}
             </span>
             {String(v).length > 80 && (

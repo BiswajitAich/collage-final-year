@@ -93,7 +93,7 @@ export function MetricCard({ metric, isLoading }: MetricCardProps) {
 
 interface LoadingSkeletonProps {
   height?: number;
-  width?: string;
+  width?: string | number;
   rounded?: boolean;
   count?: number;
   className?: string;

@@ -72,7 +72,10 @@ ${JSON.stringify(SCHEMA_JSON)}
 `;
 
 }
-export function buildWorkflowPrompt(workflowJson: Prisma.InputJsonValue): string {
+export function buildWorkflowPrompt(workflowJson: Prisma.InputJsonValue, availableTypes?: string[]): string {
+   const types = availableTypes?.length
+     ? availableTypes.map(t => `'${t}'`).join(" | ")
+     : "'webhook' | 'validation' | 'database' | 'api-call' | 'response' | 'error' | 'condition' | 'merge'";
    return `
 You are an expert workflow compiler that converts business intent into a strict n8n-compatible DAG.
 
@@ -113,15 +116,7 @@ Rules:
 * Maintain Layout rules positions x, y.
 * Create proper config path.
 
-Available node type: 
-- 'webhook' 
-- 'validation'
-- 'database' 
-- 'api-call' 
-- 'response' 
-- 'error'
-- 'condition'
-- 'merge'
+Available node type: ${types}
 
 Output ONLY valid JSON.
 
@@ -136,7 +131,7 @@ FORMAT(STRICT):
       "nodes":[
          {
             "id":"",
-            "type":"webhook" | "validation" | "database" | "api-call" | "response" | "error" | "condition" | "merge",
+            "type":${types},
             "label":"",
             "description":"",
             "position":{

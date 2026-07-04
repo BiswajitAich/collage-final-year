@@ -12,14 +12,14 @@ import type {
     N8nConnectionPorts,
     N8nConnectionTarget,
 } from "./n8n-types";
-import { NODE_MAPPERS } from "./mappers";
+import { mapGeneric, ToolRecord } from "./mappers";
 import { WorkflowEdge, WorkflowGraphData, WorkflowNode } from "@/app/(dashboard)/workflows/workflow.schema";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Public API
 // ─────────────────────────────────────────────────────────────────────────────
 
-export function graphToN8n(ir: WorkflowGraphData): CompileResult {
+export function graphToN8n(ir: WorkflowGraphData, tools: ToolRecord[]): CompileResult {
     console.log('[COMPILER CHECKPOINT 1] graphToN8n called, ir.id:', ir?.id, 'ir.description:', ir?.description);
     const warnings: string[] = [];
     const errors: string[] = [];
@@ -38,18 +38,19 @@ export function graphToN8n(ir: WorkflowGraphData): CompileResult {
     // ── 2. Compile nodes ───────────────────────────────────────────────────────
     const n8nNodes: N8nNode[] = [];
     const nodeIdToLabel = new Map<string, string>();
+    const toolsByName = new Map(tools.map((t) => [t.name, t]));
 
     for (const node of graph.nodes) {
-        const mapper = NODE_MAPPERS[node.type];
+        const tool = toolsByName.get(node.type);
 
-        if (!mapper) {
-            console.log('[COMPILER WARN] No mapper for node type:', node.type, 'on node:', node.id);
+        if (!tool) {
+            console.log('[COMPILER WARN] No tool found for node type:', node.type, 'on node:', node.id);
             errors.push(`Unknown node type "${node.type}" on node "${node.id}"`);
             continue;
         }
 
         try {
-            const mapped = mapper(node);
+            const mapped = mapGeneric(node, tool);
             const n8nNode: N8nNode = {
                 id: crypto.randomUUID(),
                 name: node.label,

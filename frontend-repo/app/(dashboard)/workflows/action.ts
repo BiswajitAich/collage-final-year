@@ -3,6 +3,7 @@
 import { getUser } from "@/app/(auth)/login/action"
 import prisma from "@/lib/prisma"
 import { graphToN8n } from "@/lib/workflow"
+import { getDbTools } from "@/app/(dashboard)/tools/action"
 import { cacheLife, cacheTag } from "next/cache"
 import { WorkflowGraphData } from "./workflow.schema"
 
@@ -91,8 +92,10 @@ export async function addWorkflowToN8n(id: string) {
             console.log('[ERROR] workflow?.workflowJson is null/falsy');
             throw new Error('workflow?.workflowJson mismatch!')
         }
+        const tools = await getDbTools();
         const compiled = graphToN8n(
-            workflow.workflowJson as WorkflowGraphData
+            workflow.workflowJson as WorkflowGraphData,
+            tools
         );
         console.log('[CHECKPOINT 4] graphToN8n result:', JSON.stringify({
             success: compiled.success,

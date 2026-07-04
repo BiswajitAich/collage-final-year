@@ -135,10 +135,9 @@ class DefaultAgent(Agent):
         )
 
     async def on_enter(self):
-        # pass
         await self.session.generate_reply(
             instructions=self._templater.render(
-                "Greet the user by name if you know it, and offer your assistance."
+                "Greet the user by name if you know it. Introduce yourself as an AI assistant."
             ),
             allow_interruptions=True,
         )
@@ -254,8 +253,9 @@ async def entrypoint(ctx: JobContext):
             # language="en-US",
         ),
         vad=ctx.proc.userdata["vad"],
-        preemptive_generation=False,
-        # preemptive_generation=True,
+        turn_handling={
+            "preemptive_generation": {"enabled": True},
+        },
     )
 
     await session.start(

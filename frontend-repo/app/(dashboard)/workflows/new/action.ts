@@ -3,6 +3,7 @@
 import { getUser } from "@/app/(auth)/login/action";
 import { GROQ_MODEL } from "@/lib/ai/llm";
 import { buildWorkflowPrompt } from "@/lib/ai/prompt";
+import { getDbTools } from "@/app/(dashboard)/tools/action";
 import prisma from "@/lib/prisma";
 import { WorkflowGenerationFormData } from "@/lib/validators";
 import { groq } from "@ai-sdk/groq";
@@ -58,10 +59,11 @@ export async function generateWorkFlow(
 
     try {
         console.log('[GENERATE CHECKPOINT 3] Calling LLM (Groq) for workflow generation');
+        const dbTools = await getDbTools();
         const llmPromise = generateText({
             model: groq(GROQ_MODEL),
             output: Output.json(WorkflowGraphSchema),
-            prompt: buildWorkflowPrompt(workflowJson),
+            prompt: buildWorkflowPrompt(workflowJson, dbTools.map(t => t.name)),
         });
         const timeoutPromise = new Promise<never>((_, reject) =>
             setTimeout(() => reject(new Error('LLM request timed out after 30s')), 30000)
@@ -122,7 +124,7 @@ export async function generateWorkFlow(
         },
     });
     console.log('[GENERATE CHECKPOINT 7] Workflow upserted, DB id:', workflow.id);
-    revalidateTag(`get-workflow-${user.id}`);
+    revalidateTag(`get-workflow-${user.id}`, "max");
 
     console.log('[GENERATE CHECKPOINT 8] Creating WorkflowExecution record');
     await prisma.workflowExecution.create({
