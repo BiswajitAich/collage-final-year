@@ -1,8 +1,13 @@
 // === DATE UTILITIES ===
 
-export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOptions): string {
+export function formatDate(
+  date: string | Date,
+  options?: Intl.DateTimeFormatOptions
+) {
   const d = typeof date === 'string' ? new Date(date) : date;
+
   return d.toLocaleDateString('en-US', {
+    timeZone: 'UTC',
     month: 'short',
     day: 'numeric',
     year: 'numeric',
@@ -10,9 +15,11 @@ export function formatDate(date: string | Date, options?: Intl.DateTimeFormatOpt
   });
 }
 
-export function formatDateTime(date: string | Date): string {
+export function formatDateTime(date: string | Date) {
   const d = typeof date === 'string' ? new Date(date) : date;
+
   return d.toLocaleString('en-US', {
+    timeZone: 'UTC',
     month: 'short',
     day: 'numeric',
     year: 'numeric',

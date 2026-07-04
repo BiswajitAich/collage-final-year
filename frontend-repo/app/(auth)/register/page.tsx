@@ -8,7 +8,6 @@ import Link from 'next/link';
 import { Eye, EyeOff, Zap, ArrowRight, User, Mail, Lock } from 'lucide-react';
 import { registerSchema, type RegisterFormData } from '@/lib/validators';
 import { useAuthStore } from '@/stores';
-import { sleep } from '@/lib/utils';
 import styles from '../login/login.module.css';
 import regStyles from './register.module.css';
 import { registerUser } from './actions';

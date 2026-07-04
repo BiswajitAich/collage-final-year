@@ -426,6 +426,7 @@ export default function NewWorkflowPage({
                         <input
                           type="radio"
                           value={mode.value}
+                          disabled={!(mode.value==="AI")} // dissable others for now, except ai creation !!!
                           {...register('generationMode')}
                           className={styles.modeRadio}
                         />
