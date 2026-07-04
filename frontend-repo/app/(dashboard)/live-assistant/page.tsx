@@ -4,6 +4,7 @@ import { useState, useCallback, useEffect } from 'react';
 import { LiveKitRoom } from '@livekit/components-react';
 import '@livekit/components-styles';
 import { PageHeader } from '@/components/ui/UIComponents';
+import { useAuthStore } from '@/stores';
 
 import { FASTAPI_BASE_URL, DEFAULTS } from './types';
 import type { CallMode, CreateRoomResponse, EndReason } from './types';

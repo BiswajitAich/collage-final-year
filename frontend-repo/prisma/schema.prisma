@@ -200,6 +200,7 @@ model VoiceSession {
   successRate   Float   @default(0)
   roomName      String?
   phoneNumber   String?
+  name          String?
 
   createdAt DateTime @default(now())
 

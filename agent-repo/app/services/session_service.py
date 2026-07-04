@@ -20,6 +20,7 @@ async def create_session(
     room_name: str,
     customer_id: str,
     phone_number: Optional[str] = None,
+    name: Optional[str] = None,
 ) -> VoiceSession:
     now = datetime.now(timezone.utc)
     session = VoiceSession(
@@ -29,6 +30,7 @@ async def create_session(
         status=SessionStatus.PENDING,
         roomName=room_name,
         phoneNumber=phone_number,
+        name=name,
         startTime=now,
         createdAt=now,
     )

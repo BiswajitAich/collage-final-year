@@ -32,11 +32,7 @@ load_dotenv(".env")
 
 TOOLS_API_URL = os.getenv("TOOLS_API_URL", "http://localhost:8000/agent/tools").strip()
 
-DEFAULT_FAKE_METADATA = {
-    "user_id": "20000000-0000-0000-0000-000000000001",
-    "caller_phone_number": "9999999999",
-    "name": "Test User",
-}
+DEFAULT_FAKE_METADATA: dict[str, str] = {}
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -106,6 +102,14 @@ class VariableTemplater:
         rendered = rendered.replace(
             "{{caller_phone_number}}",
             str(metadata.get("caller_phone_number", "")),
+        )
+        rendered = rendered.replace(
+            "{{customer_id}}",
+            str(metadata.get("customer_id", "")),
+        )
+        rendered = rendered.replace(
+            "{{user_name}}",
+            str(metadata.get("name", "")),
         )
         rendered = rendered.replace(
             "{{tools_summary}}",
