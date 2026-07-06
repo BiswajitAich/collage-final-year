@@ -93,5 +93,3 @@ export const mockSuccessRateTimeSeries = generateTimeSeries(30, 98, 4).map((d) =
 }));
 export const mockEndpointCallsTimeSeries = generateTimeSeries(30, 5400, 1200);
 export const mockVoiceSessionsTimeSeries = generateTimeSeries(30, 45, 20);
-
-

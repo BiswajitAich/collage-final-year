@@ -27,10 +27,9 @@ export function Sidebar() {
   const toggleSidebar = useUIStore(s => s.toggleSidebar);
 
   const isActive = (href: string) => {
-    if (pathname === href) return true;
-    if (href === '/dashboard') return false;
-    if (NAV_ITEMS.some((n) => n.href !== href && n.href.startsWith(href + '/'))) return false;
-    return pathname.startsWith(href + '/');
+    if (href === '/dashboard') return pathname === '/dashboard';
+    if (href === '/schema') return pathname === href;
+    return pathname.startsWith(href);
   };
 
   return (

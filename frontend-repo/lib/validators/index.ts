@@ -20,6 +20,13 @@ export const registerSchema = z.object({
   path: ['confirmPassword'],
 });
 
+export const forgotSchema = z.object({
+  email: z.email('Invalid email format'),
+  password: z.string().optional(),
+  confirmPassword: z.string().optional(),
+
+});
+
 export const workflowGenerationSchema = z.object({
   // schemaId: z.string(),
   // capabilityId: z.string(),
@@ -27,9 +34,9 @@ export const workflowGenerationSchema = z.object({
   purpose: z.string().min(10).max(500),
   entities: z.array(z.string()).min(1),
   // endpoint: z.string(),
-  endpointType: z.enum(['REST','WEBHOOK']),
-  httpMethod: z.enum(['GET','POST','PUT','PATCH','DELETE',]),
-  generationMode: z.enum(['AI','GUIDED','MANUAL',]),
+  endpointType: z.enum(['REST', 'WEBHOOK']),
+  httpMethod: z.enum(['GET', 'POST', 'PUT', 'PATCH', 'DELETE',]),
+  generationMode: z.enum(['AI', 'GUIDED', 'MANUAL',]),
   requiresAuth: z.boolean(),
   isReadOnly: z.boolean(),
   enableCRUD: z.boolean(),
@@ -82,6 +89,7 @@ export const settingsN8nSchema = z.object({
 
 export type LoginFormData = z.infer<typeof loginSchema>;
 export type RegisterFormData = z.infer<typeof registerSchema>;
+export type ForgotFormData = z.infer<typeof forgotSchema>;
 export type WorkflowGenerationFormData = z.infer<typeof workflowGenerationSchema>;
 export type WorkflowEditFormData = z.infer<typeof workflowEditSchema>;
 export type ToolEditFormData = z.infer<typeof toolEditSchema>;

@@ -445,6 +445,7 @@ export default function NewWorkflowPage({
                         <input
                           type="radio"
                           value={mode.value}
+                          disabled={!(mode.value==="AI")} // dissable others for now, except ai creation !!!
                           {...register('generationMode')}
                           className={styles.modeRadio}
                         />
@@ -581,7 +582,7 @@ export default function NewWorkflowPage({
                   onClick={handleApprove}
                   isLoading={isDeploying}
                 >
-                  {isDeploying ? 'Deploying…' : 'Approve &amp; Test on n8n'}
+                  {isDeploying ? 'Deploying…' : 'Approve & Test on n8n'}
                 </Button>
               </div>
             </div>

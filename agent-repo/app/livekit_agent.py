@@ -139,17 +139,12 @@ class DefaultAgent(Agent):
         )
 
     async def on_enter(self):
-        customer_info = await self._lookup_customer_info()
-        if customer_info:
-            await self.session.generate_reply(
-                instructions=f"Greet the caller naturally. Their info: {customer_info}",
-                allow_interruptions=True,
-            )
-        else:
-            await self.session.generate_reply(
-                instructions="Greet the caller. Introduce yourself.",
-                allow_interruptions=True,
-            )
+        await self.session.generate_reply(
+            instructions=self._templater.render(
+                "Greet {{user_name}} by name. State the customer {{customer_id}} you will help with. Do NOT ask for any personal information — the form already provided everything. Ask how you can help."
+            ),
+            allow_interruptions=True,
+        )
 
     async def _lookup_customer_info(self) -> str:
         metadata = self._templater.variables["metadata"]

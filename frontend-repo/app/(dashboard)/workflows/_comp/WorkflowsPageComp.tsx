@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { Plus, RefreshCw, Search, Zap, Clock, CheckCircle2, AlertTriangle } from 'lucide-react';
 import { workflowService } from '@/lib/api/services';
@@ -8,7 +8,7 @@ import { useWorkflowStore } from '@/stores';
 import { PageHeader, StatusBadge } from '@/components/ui/UIComponents';
 import { Button } from '@/components/ui/Button';
 import { DataTable } from '@/components/ui/DataTable';
-import { formatNumber, formatPercent, formatLatency, timeAgo } from '@/lib/utils';
+import { formatNumber, formatPercent, formatLatency, timeAgo, formatDate } from '@/lib/utils';
 import type { TableColumn } from '@/lib/types';
 import styles from '../workflows.module.css';
 
@@ -52,7 +52,19 @@ export default function WorkflowsPageComp({ workflowsData }: { workflowsData: Wo
         FAILED: workflows?.filter((w) => w.status === 'FAILED').length,
         INACTIVE: workflows?.filter((w) => w.status === 'INACTIVE').length,
     }), [workflows]);
+    function TimeAgo({ date }: { date: string }) {
+        const [mounted, setMounted] = useState(false);
 
+        useEffect(() => {
+            setMounted(true);
+        }, []);
+
+        if (!mounted) {
+            return <span>{formatDate(date)}</span>;
+        }
+
+        return <span>{timeAgo(date)}</span>;
+    }
     const columns: TableColumn<WorkflowListDTO>[] = [
         {
             key: 'name',
@@ -111,7 +123,11 @@ export default function WorkflowsPageComp({ workflowsData }: { workflowsData: Wo
             label: 'Updated',
             sortable: true,
             width: '120px',
-            render: (v) => <span className={styles.mono}>{timeAgo(String(v))}</span>,
+            render: (v) => (
+                <span className={styles.mono}>
+                    <TimeAgo date={String(v)} />
+                </span>
+            )
         },
     ];
     console.log(JSON.stringify(workflowsData, null, 2));
