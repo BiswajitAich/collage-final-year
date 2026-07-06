@@ -26,8 +26,9 @@ Available tools:
 - Summarize results clearly.
 - If a user asks for something that requires a tool, use the appropriate tool.
 """
-extra_description = """End the call when -
-1. The user says goodbye or wants to end the call.
-2. User is unresponsive for a long time.
+extra_description = """\
+End the call when the user says goodbye, wants to end the call, or is unresponsive for a long time.
 """
-end_instructions="""Thank the user for their time and say goodbye."""
+end_instructions = """\
+Thank the user for their time and say goodbye.
+"""

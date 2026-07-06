@@ -12,6 +12,7 @@ def _require(key: str) -> str:
 
 
 DATABASE_URL: str = _require("DATABASE_URL")
+APP_DATABASE_URL: str = os.getenv("APP_DATABASE_URL", "").strip()
 
 LIVEKIT_URL: str = _require("LIVEKIT_URL")
 LIVEKIT_API_KEY: str = _require("LIVEKIT_API_KEY")
@@ -30,7 +31,7 @@ FRONTEND_ORIGINS: list[str] = [
 TOOLS_API_URL: str = os.getenv(
     "TOOLS_API_URL", "http://localhost:8000/agent/tools"
 ).strip()
-USE_MOCK_TOOLS: bool = os.getenv("USE_MOCK_TOOLS", "false").lower() == "true"
+USE_MOCK_TOOLS: bool = os.getenv("USE_MOCK_TOOLS", "").lower() == "true"
 
 ROOM_EMPTY_TIMEOUT_SEC: int = int(os.getenv("ROOM_EMPTY_TIMEOUT_SEC", "300"))
 ROOM_MAX_PARTICIPANTS: int = int(os.getenv("ROOM_MAX_PARTICIPANTS", "10"))

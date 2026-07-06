@@ -68,10 +68,20 @@ class ToolRegistry:
             return "No tools loaded."
         lines = []
         for i, tool in enumerate(self.tools, start=1):
+            params = tool.get("inputSchema")
+            params_str = ""
+            if params and isinstance(params, dict):
+                required = params.get("required", [])
+                properties = params.get("properties", {})
+                if required:
+                    param_list = ", ".join(f"{k}({properties[k].get('type','string')})" for k in required if k in properties)
+                    params_str = f" | params={param_list}"
+
             lines.append(
                 f"{i}. {tool['name']} — "
                 f"{tool.get('description') or tool.get('purpose') or 'No description'}"
                 f" | method={tool['httpMethod']} | endpoint={tool['endpoint']}"
+                f"{params_str}"
             )
         return "\n".join(lines)
 
@@ -146,23 +156,47 @@ class DefaultAgent(Agent):
             allow_interruptions=True,
         )
 
-    @function_tool(name="list_available_tools")
-    async def list_available_tools(self, context: RunContext) -> str:
+    async def _lookup_customer_info(self) -> str:
+        metadata = self._templater.variables["metadata"]
+        customer_id = metadata.get("customer_id") or metadata.get("user_id", "")
+
+        tool = self._tool_registry.resolve("customers-details")
+        if not tool:
+            return ""
+
+        endpoint = str(tool["endpoint"])
+        if endpoint.startswith("mock://"):
+            return self._mock_tool_response("customers-details", {"customer_id": customer_id})
+
+        try:
+            session = utils.http_context.http_session()
+            async with session.get(endpoint, params={"customer_id": customer_id}) as resp:
+                if resp.status < 400:
+                    return await resp.text()
+        except Exception:
+            pass
+        return ""
+
+    @function_tool(name="list_tools")
+    async def list_tools(self, context: RunContext) -> str:
+        """Return the list of tools the assistant can run."""
         context.disallow_interruptions()
         return self._tool_registry.summary_text()
 
-    @function_tool(name="who_am_i")
-    async def who_am_i(self, context: RunContext) -> str:
+    @function_tool(name="get_call_info")
+    async def get_call_info(self, context: RunContext) -> str:
+        """Return who is calling — name, user ID, phone number."""
         context.disallow_interruptions()
         return json.dumps(self._templater.variables["metadata"], indent=2)
 
-    @function_tool(name="run_registered_tool")
-    async def run_registered_tool(
+    @function_tool(name="run_tool")
+    async def run_tool(
         self,
         context: RunContext,
         tool_name: str,
         payload_json: str = "{}",
     ) -> str:
+        """Run one of the available tools by name. Pass parameters as JSON."""
         context.disallow_interruptions()
 
         tool = self._tool_registry.resolve(tool_name)
@@ -175,6 +209,13 @@ class DefaultAgent(Agent):
                 raise ValueError("payload_json must decode to a JSON object")
         except Exception as e:
             raise ToolError(f"Invalid payload_json: {e!s}") from e
+
+        # Auto-inject customer_id from call metadata if the tool needs it
+        metadata = self._templater.variables["metadata"]
+        if "customer_id" not in payload:
+            customer_id = metadata.get("customer_id") or metadata.get("user_id", "")
+            if customer_id:
+                payload["customer_id"] = customer_id
 
         endpoint = str(tool["endpoint"])
         method = str(tool["httpMethod"]).upper()
