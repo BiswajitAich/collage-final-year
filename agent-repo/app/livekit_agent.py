@@ -68,10 +68,20 @@ class ToolRegistry:
             return "No tools loaded."
         lines = []
         for i, tool in enumerate(self.tools, start=1):
+            params = tool.get("inputSchema")
+            params_str = ""
+            if params and isinstance(params, dict):
+                required = params.get("required", [])
+                properties = params.get("properties", {})
+                if required:
+                    param_list = ", ".join(f"{k}({properties[k].get('type','string')})" for k in required if k in properties)
+                    params_str = f" | params={param_list}"
+
             lines.append(
                 f"{i}. {tool['name']} — "
                 f"{tool.get('description') or tool.get('purpose') or 'No description'}"
                 f" | method={tool['httpMethod']} | endpoint={tool['endpoint']}"
+                f"{params_str}"
             )
         return "\n".join(lines)
 

@@ -45,6 +45,7 @@ class WorkflowTool(BaseModel):
     httpMethod: str
     endpoint: str
     n8nWebhookUrl: Optional[str] = None
+    inputSchema: Optional[dict] = None
 
 
 class ToolRegistryResponse(BaseModel):
@@ -81,7 +82,8 @@ async def _fetch_from_db() -> list[WorkflowTool]:
                         purpose,
                         "httpMethod",
                         endpoint,
-                        "n8nWebhookUrl"
+                        "n8nWebhookUrl",
+                        "inputSchema"
                     FROM "Workflow"
                     WHERE status = 'ACTIVE'
                       AND COALESCE("n8nWebhookUrl", endpoint) IS NOT NULL
@@ -103,6 +105,7 @@ async def _fetch_from_db() -> list[WorkflowTool]:
             httpMethod=row["httpMethod"],
             endpoint=_normalize_webhook_url(row["n8nWebhookUrl"]) or row["endpoint"],
             n8nWebhookUrl=row["n8nWebhookUrl"],
+            inputSchema=row["inputSchema"],
         )
         for row in rows
     ]
