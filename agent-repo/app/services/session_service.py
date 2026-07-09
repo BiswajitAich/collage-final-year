@@ -95,7 +95,7 @@ async def end_session(
     if not session:
         raise ValueError(f"Session not found: {session_id}")
 
-    if session.status == SessionStatus.ENDED:
+    if session.status is SessionStatus.ENDED:
         return session  # idempotent
 
     now = datetime.now(timezone.utc)

@@ -84,7 +84,7 @@ async def create_room(
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return CreateRoomResponse(
-        session_id=session.id,
+        session_id=str(session.id),
         room_name=room_name,
         token=token,
         livekit_url=LIVEKIT_URL,
@@ -105,14 +105,14 @@ async def initiate_outbound_call(
     session = await session_service.get_session(db, req.session_id)
     if not session:
         raise HTTPException(status_code=404, detail="Session not found")
-    if not session.roomName:
+    if session.roomName is None:
         raise HTTPException(status_code=400, detail="Session has no associated room")
     if session.status in ("ENDED", "FAILED"):
         raise HTTPException(status_code=400, detail=f"Session is {session.status}")
 
     try:
         await livekit_service.create_sip_outbound_call(
-            room_name=session.roomName,
+            room_name=session.roomName or "",
             phone_number=req.phone_number,
             participant_name=req.name or req.phone_number,
         )

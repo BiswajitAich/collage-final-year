@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 import logging
 import os
+from typing import Any
 
 from dotenv import load_dotenv
 from livekit.agents import (
@@ -23,6 +24,27 @@ from app.core.registry import ToolRegistry
 
 logger = logging.getLogger("agent-assistant")
 load_dotenv(".env")
+
+
+def _safe_json(value: Any) -> str:
+    try:
+        return json.dumps(value, ensure_ascii=False, default=str)
+    except Exception:
+        return str(value)
+
+
+def _log_conversation_item(item: Any) -> None:
+    item_type = getattr(item, "type", None)
+    role = getattr(item, "role", None)
+    content = getattr(item, "content", None)
+    item_id = getattr(item, "id", None)
+    logger.info(
+        "conversation_item: id=%s type=%s role=%s content=%s",
+        item_id,
+        item_type,
+        role,
+        _safe_json(content),
+    )
 
 TOOLS_API_URL = os.getenv("TOOLS_API_URL", "http://localhost:8000/agent/tools").strip()
 DEFAULT_FAKE_METADATA: dict[str, str] = {}
@@ -46,6 +68,7 @@ async def entrypoint(ctx: JobContext):
     print(json.dumps(tool_registry.list(), indent=2))
 
     metadata_json = ctx.job.metadata or json.dumps(DEFAULT_FAKE_METADATA)
+    logger.info("Agent job metadata: %s", metadata_json)
 
     session = AgentSession(
         stt=inference.STT(
@@ -68,10 +91,9 @@ async def entrypoint(ctx: JobContext):
     def on_item(event):
         try:
             item = event.item
-
+            _log_conversation_item(item)
             print(type(item))
             print(item)
-
         except Exception:
             import traceback
 
@@ -79,13 +101,16 @@ async def entrypoint(ctx: JobContext):
 
     @session.on("close")
     def on_close(event):
+        logger.info("SESSION CLOSED: %s", _safe_json(getattr(event, "__dict__", str(event))))
         print("SESSION CLOSED")
 
     @session.on("error")
     def on_error(err):
+        logger.exception("Agent session error: %s", err)
         print(err)
 
     summary = tool_registry.summary()
+    logger.info("TOOLS SUMMARY\n%s", summary)
     print("=" * 100)
     print("TOOLS SUMMARY")
     print("=" * 100)
@@ -96,13 +121,17 @@ async def entrypoint(ctx: JobContext):
         tool_registry=tool_registry,
     )
 
+    logger.info("Agent instructions prepared")
     await session.start(
         agent=agent,
         room=ctx.room,
     )
+    logger.info("Agent session started for room=%s", getattr(ctx.room, "name", None))
 
+    initial_greeting = agent.initial_greeting()
+    logger.info("Initial greeting prompt: %s", initial_greeting)
     await session.generate_reply(
-        instructions=agent.initial_greeting(),
+        instructions=initial_greeting,
         allow_interruptions=True,
     )
 

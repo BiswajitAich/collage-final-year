@@ -121,115 +121,46 @@ OUTPUT_FORMAT
 export function buildReviewAnalysisPrompt(
     schemaJson: Prisma.InputJsonValue,
 ): string {
-    return `
-You are an expert Software Architect.
-Your task is to analyze the provided database schema and identify the business capabilities that can be exposed through a voice AI assistant.
-The generated capabilities will later be converted into n8n workflows and callable tools.
-━━━
-OBJECTIVE
-━━━
-Analyze the schema and determine:
-• Business domain
-• Business summary
-• Business entities
-• Entity relationships
-• Read-only capabilities
-• Business rules
-• Suggestions for improving the API
-━━━
-SYSTEM ASSUMPTIONS
-━━━
-The application is READ ONLY.
-The authenticated customer/user is already known.
-The backend automatically injects:
-- authenticated user
-- customer id
-- session id
-Never expose customer ids or user ids in generated endpoints.
-Capabilities should answer natural questions such as:
+    return `Return ONLY valid JSON for capability analysis. No markdown, comments, code fences, or extra text.
+
+ROLE
+You analyze a database schema for a voice assistant that supports authenticated, read-only customer workflows.
+
+HARD_RULES
+- App is READ ONLY.
+- Authenticated user_id is always available automatically.
+- Prefer capabilities that can start from user_id only.
+- Do NOT require the caller to provide customer_id, order_id, address_id, subscription_id, invoice_id, or any other internal ID.
+- If another ID is needed, assume the workflow should fetch it from the database using user_id, then continue.
+- Never expose raw internal IDs in endpoints or capability descriptions.
+- Capabilities must be realistic voice queries a customer would ask.
+- Each capability = one business question.
+- Use GET only.
+- Categories allowed: READ, SEARCH.
+- Do NOT generate CREATE, UPDATE, DELETE, REPORT, or WORKFLOW capabilities.
+- Endpoints must be REST-style, no path params, no IDs in the path.
+- Prefer user-centric endpoints like /users/profile, /users/address, /users/orders, /customer/status.
+- Use schema entity names when helpful, but optimize for real user questions.
+
+GOOD_CAPABILITIES EXAMPLES
 - What is my profile?
 - What is my address?
-- What are my recent orders?
 - What is my account status?
+- What are my recent orders?
 - Show my invoices.
 - Show my subscriptions.
-━━━
-CAPABILITY RULES
-━━━
-Generate realistic customer-facing capabilities.
-Each capability must represent ONE business question.
-Use schema entity names whenever possible.
-Capability ids:
-- snake_case
-- unique
-- descriptive
-Examples:
-get_user_profile
-get_user_address
-get_order_history
-get_customer_status
-search_products
-━━━
-CATEGORY RULES
-━━━
-Allowed categories ONLY:
-READ
-SEARCH
-Do NOT generate:
-CREATE
-UPDATE
-DELETE
-REPORT
-WORKFLOW
-━━━
-HTTP RULES
-━━━
-Allowed HTTP methods:
-GET only.
-━━━
-ENDPOINT RULES
-━━━
-Generate REST endpoints WITHOUT path parameters.
-GOOD
-/users/profile
-/users/address
-/users/orders
-/users/invoices
-/orders/history
-/customer/status
-The authenticated customer will always be determined by the backend.
-━━━
-BUSINESS RULES
-━━━
-Generate realistic business rules inferred from the schema.
-Examples:
-- A customer may have multiple orders.
-- Every order belongs to exactly one customer.
-- An inactive account cannot access premium services.
-- Orders cannot exist without a customer.
-━━━
+
+CAPABILITY_NAMING
+- id must be snake_case, unique, descriptive
+- examples: get_user_profile, get_user_address, get_order_history, get_customer_status, search_products
+
+BUSINESS_RULES
+Infer realistic domain rules from the schema.
+
 SUGGESTIONS
-━━━
-Generate useful architectural suggestions such as:
-- Missing indexes
-- Missing foreign keys
-- Audit logging
-- Soft delete
-- Pagination
-- Search optimization
-- Data validation
-- API improvements
-━━━
-OUTPUT RULES
-━━━
-Return ONLY valid JSON.
-Do NOT include:
-- markdown
-- explanations
-- comments
-- code fences
-- additional text
-The JSON MUST exactly match this schema.
+Prefer practical suggestions: indexes, foreign keys, pagination, audit logs, soft delete, validation, search optimization, API improvements.
+
+OUTPUT_SCHEMA
 {
   "domain": "string",
   "summary": "string",
@@ -262,9 +193,8 @@ The JSON MUST exactly match this schema.
     }
   ]
 }
-━━━
-DATABASE SCHEMA
-━━━
-${JSON.stringify(schemaJson, null, 2)}
+
+DATABASE_SCHEMA
+${JSON.stringify(schemaJson)}
 `;
 }

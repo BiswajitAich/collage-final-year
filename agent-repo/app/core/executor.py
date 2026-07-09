@@ -110,7 +110,7 @@ def _mock_tool_response(tool_name: str, payload: dict[str, Any]) -> str:
             },
             indent=2,
         )
-    if tool_name in {"get_customer_by_id", "customers_details"}:
+    if tool_name in {"get_customer_by_id", "customers_details", "get_user_profile", "customer_profile", "get_customer_profile"}:
         return json.dumps(
             {
                 "customer_id": payload.get("customer_id", ""),

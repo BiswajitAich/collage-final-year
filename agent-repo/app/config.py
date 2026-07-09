@@ -12,7 +12,7 @@ def _require(key: str) -> str:
 
 
 DATABASE_URL: str = _require("DATABASE_URL")
-APP_DATABASE_URL: str = os.getenv("APP_DATABASE_URL", "").strip()
+APP_DATABASE_URL: str = os.getenv("APP_DATABASE_URL", "").strip() or DATABASE_URL
 
 LIVEKIT_URL: str = _require("LIVEKIT_URL")
 LIVEKIT_API_KEY: str = _require("LIVEKIT_API_KEY")

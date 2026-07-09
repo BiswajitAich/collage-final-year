@@ -149,7 +149,7 @@ export default function WorkflowsPageComp({ workflowsData }: { workflowsData: Wo
                             onClick={() => {
                                 setLoading(true);
                                 workflowService.getWorkflows().then((d) => {
-                                    // setWorkflows(d); 
+                                    // setWorkflows(d);
                                     setLoading(false);
                                 });
                             }}>
@@ -212,7 +212,7 @@ export default function WorkflowsPageComp({ workflowsData }: { workflowsData: Wo
                 keyExtractor={(row) => String(row.id)}
                 emptyTitle="No workflows found"
                 emptyDescription={search ? `No workflows match "${search}"` : 'Create your first workflow to get started.'}
-                onRowClick={(row) => router.push(`/workflows/${row.id}`)}
+                onRowClick={(row) => router.push(`/workflows/new/${row.id}/${row.name}`)}
             />
 
             {/* Generate new workflow prompt */}

@@ -5,7 +5,7 @@ from urllib.parse import urlsplit, urlunsplit
 from fastapi import APIRouter
 from pydantic import BaseModel
 from sqlalchemy import text
-from app.config import APP_DATABASE_URL, USE_MOCK_TOOLS
+from app.config import APP_DATABASE_URL, DATABASE_URL, USE_MOCK_TOOLS
 from app.database import AppSessionLocal
 
 logger = logging.getLogger("agent")
@@ -16,46 +16,66 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 # ── Mock tools (dev / testing) ────────────────────────────────────────────────
 
 MOCK_TOOLS: list[dict[str, Any]] = [
-    {
-        "id": "mock-1",
-        "name": "customers-status",
-        "description": "Get customer status details.",
-        "purpose": "Get customer status details.",
-        "httpMethod": "GET",
-        "url": "http://localhost:5678/webhook/users/customer-status",
-        "n8nWebhookUrl": "http://localhost:5678/webhook/users/customer-status",
-        "status": "ACTIVE",
-        "toolSchema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string",
-                    "description": "Customer ID",
-                }
-            },
-            "required": ["customer_id"],
-        },
-    },
-    {
-        "id": "mock-2",
-        "name": "customers-details",
-        "description": "Get detailed information about a customer.",
-        "purpose": "Get detailed information about a customer.",
-        "httpMethod": "GET",
-        "url": "http://localhost:5678/webhook/frontend-test-4",
-        "n8nWebhookUrl": "http://localhost:5678/webhook/frontend-test-4",
-        "status": "ACTIVE",
-        "toolSchema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string",
-                    "description": "Customer ID",
-                }
-            },
-            "required": ["customer_id"],
-        },
-    },
+    # {
+    #     "id": "mock-1",
+    #     "name": "customers-status",
+    #     "description": "Get customer status details.",
+    #     "purpose": "Get customer status details.",
+    #     "httpMethod": "GET",
+    #     "url": "http://localhost:5678/webhook/users/customer-status",
+    #     "n8nWebhookUrl": "http://localhost:5678/webhook/users/customer-status",
+    #     "status": "ACTIVE",
+    #     "toolSchema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "customer_id": {
+    #                 "type": "string",
+    #                 "description": "Customer ID",
+    #             }
+    #         },
+    #         "required": ["customer_id"],
+    #     },
+    # },
+    # {
+    #     "id": "mock-2",
+    #     "name": "customers-details",
+    #     "description": "Get detailed information about a customer.",
+    #     "purpose": "Get detailed information about a customer.",
+    #     "httpMethod": "GET",
+    #     "url": "http://localhost:5678/webhook/frontend-test-4",
+    #     "n8nWebhookUrl": "http://localhost:5678/webhook/frontend-test-4",
+    #     "status": "ACTIVE",
+    #     "toolSchema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "customer_id": {
+    #                 "type": "string",
+    #                 "description": "Customer ID",
+    #             }
+    #         },
+    #         "required": ["customer_id"],
+    #     },
+    # },
+    # {
+    #     "id": "mock-3",
+    #     "name": "get_user_profile",
+    #     "description": "Get the current customer's profile details.",
+    #     "purpose": "Retrieve the caller's profile details such as name, phone, email, and account status.",
+    #     "httpMethod": "GET",
+    #     "url": "http://localhost:5678/webhook/frontend-test-4",
+    #     "n8nWebhookUrl": "http://localhost:5678/webhook/frontend-test-4",
+    #     "status": "ACTIVE",
+    #     "toolSchema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "customer_id": {
+    #                 "type": "string",
+    #                 "description": "Customer ID",
+    #             }
+    #         },
+    #         "required": ["customer_id"],
+    #     },
+    # },
 ]
 
 
@@ -89,31 +109,40 @@ def _normalize_webhook_url(url: Optional[str]) -> Optional[str]:
 
 
 async def _fetch_from_db() -> list[WorkflowTool]:
-    if not APP_DATABASE_URL:
-        logger.warning("APP_DATABASE_URL not set")
+    if AppSessionLocal is None:
+        logger.warning("Workflow DB session is not configured")
         return []
-    async with AppSessionLocal() as session:
-        result = await session.execute(
-            text(
-                """
-                SELECT
-                    id,
-                    name,
-                    description,
-                    purpose,
-                    "httpMethod",
-                    COALESCE("n8nWebhookUrl", endpoint) AS url,
-                    "n8nWebhookUrl",
-                    status,
-                    "toolSchema"
-                FROM "Workflow"
-                WHERE status = 'ACTIVE'
-                  AND COALESCE("n8nWebhookUrl", endpoint) IS NOT NULL
-                ORDER BY "createdAt" DESC
-                """
+
+    db_source = "APP_DATABASE_URL" if APP_DATABASE_URL and APP_DATABASE_URL != DATABASE_URL else "DATABASE_URL"
+
+    try:
+        async with AppSessionLocal() as session:
+            result = await session.execute(
+                text(
+                    """
+                    SELECT
+                        id,
+                        name,
+                        description,
+                        purpose,
+                        "httpMethod",
+                        COALESCE(NULLIF("n8nWebhookUrl", ''), NULLIF(endpoint, '')) AS url,
+                        "n8nWebhookUrl",
+                        status,
+                        "toolSchema"
+                    FROM "Workflow"
+                    WHERE status = 'ACTIVE'
+                      AND COALESCE(NULLIF("n8nWebhookUrl", ''), NULLIF(endpoint, '')) IS NOT NULL
+                    ORDER BY "createdAt" DESC
+                    """
+                )
             )
-        )
-        rows = result.mappings().all()
+            rows = result.mappings().all()
+    except Exception:
+        logger.exception("Failed to load workflow tools from %s", db_source)
+        return []
+
+    logger.info("Loaded %s active workflow tools from %s", len(rows), db_source)
 
     return [
         WorkflowTool(
@@ -122,7 +151,7 @@ async def _fetch_from_db() -> list[WorkflowTool]:
             description=row["description"],
             purpose=row["purpose"],
             httpMethod=row["httpMethod"],
-            url=_normalize_webhook_url(row["url"]),
+            url=str(_normalize_webhook_url(row["url"]) or ""),
             n8nWebhookUrl=row["n8nWebhookUrl"],
             status=row["status"],
             toolSchema=row["toolSchema"],
@@ -143,6 +172,7 @@ async def _get_tools() -> list[WorkflowTool]:
 async def get_agent_tools():
     """Return all active workflow tools. Consumed by the agent's ToolRegistry."""
     tools = await _get_tools()
+    logger.info("Returning %s tools from /agent/tools", len(tools))
     return ToolRegistryResponse(count=len(tools), tools=tools)
 
 

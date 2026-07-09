@@ -45,6 +45,7 @@ def _schema_arguments(tool: dict[str, Any]) -> list[str]:
 
 class ToolRegistry:
     def __init__(self, tools: list[dict[str, Any]]):
+        print("Received tools:", len(tools))
         self._tools: list[dict[str, Any]] = []
         self._by_key: dict[str, dict[str, Any]] = {}
 

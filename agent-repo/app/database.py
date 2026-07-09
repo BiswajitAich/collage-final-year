@@ -1,4 +1,4 @@
-from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
+from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import APP_DATABASE_URL, DATABASE_URL
 
@@ -25,22 +25,29 @@ async def get_db():
 
 
 # ── App database (Workflow, User — Prisma-managed) ────────────────────────────
+# Falls back to DATABASE_URL when APP_DATABASE_URL is not explicitly provided.
 
-app_engine = create_async_engine(
-    APP_DATABASE_URL,
-    pool_pre_ping=True,
-    pool_size=2,
-    max_overflow=5,
-)
+app_engine: AsyncEngine | None = None
+AppSessionLocal: async_sessionmaker[AsyncSession] | None = None
 
-AppSessionLocal = async_sessionmaker(
-    bind=app_engine,
-    class_=AsyncSession,
-    expire_on_commit=False,
-)
+if APP_DATABASE_URL:
+    app_engine = create_async_engine(
+        APP_DATABASE_URL,
+        pool_pre_ping=True,
+        pool_size=2,
+        max_overflow=5,
+    )
+
+    AppSessionLocal = async_sessionmaker(
+        bind=app_engine,
+        class_=AsyncSession,
+        expire_on_commit=False,
+    )
 
 
 async def get_app_db():
     """FastAPI dependency — yields an async session on the app database."""
+    if AppSessionLocal is None:
+        raise RuntimeError("APP_DATABASE_URL is not configured")
     async with AppSessionLocal() as session:
         yield session
