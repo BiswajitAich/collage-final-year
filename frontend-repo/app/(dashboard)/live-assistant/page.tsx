@@ -251,9 +251,10 @@ export default function LiveAssistantPage() {
                                     <input
                                         id="adminId"
                                         value={adminId}
-                                        // onChange={(e) =>
-                                        //     setAdminId(e.target.value)
-                                        // }
+                                            onChange={                                                                                                (e) =>
+                                            setAdminId(e.target.value)
+                                        }
+                                            // disabled
                                         placeholder="Admin ID"
                                     />
                                 </div>

@@ -415,8 +415,9 @@ export async function generateWorkFlow(
     console.log("[GENERATE CHECKPOINT 9] Done, returning workflow");
 
     return {
-        ...workflow,
         ...(generatedGraph ?? {}),
+        ...workflow,
+        id: workflow.id,
         name: workflowName, // Ensure returned name is stable
     } as GeneratedWorkflow;
 }

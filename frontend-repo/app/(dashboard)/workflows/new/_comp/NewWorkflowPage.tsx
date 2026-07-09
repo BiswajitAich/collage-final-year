@@ -225,7 +225,7 @@ export default function NewWorkflowPage({
             console.log("[UI ERROR] No generated workflow to approve");
             return;
         }
-        const idToUse = workflowId || savedWorkflowId;
+        const idToUse = savedWorkflowId || workflowId;
         console.log("[UI CHECKPOINT] Using ID for n8n deploy:", idToUse);
         if (!idToUse) {
             addToast({ type: "warning", title: "Workflow id not found !" });
