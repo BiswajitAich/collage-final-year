@@ -121,127 +121,62 @@ OUTPUT_FORMAT
 export function buildReviewAnalysisPrompt(
     schemaJson: Prisma.InputJsonValue,
 ): string {
-    return `
-You are an expert Software Architect.
-Your task is to analyze the provided database schema and identify the business capabilities that can be exposed through a voice AI assistant.
-The generated capabilities will later be converted into n8n workflows and callable tools.
-━━━
-OBJECTIVE
-━━━
-Analyze the schema and determine:
-• Business domain
-• Business summary
-• Business entities
-• Entity relationships
-• Read-only capabilities
-• Business rules
-• Suggestions for improving the API
-━━━
-SYSTEM ASSUMPTIONS
-━━━
-The application is READ ONLY.
-The authenticated customer/user is already known.
-The backend automatically injects:
-- authenticated user
-- customer id
-- session id
-Never expose customer ids or user ids in generated endpoints.
-Capabilities should answer natural questions such as:
-- What is my profile?
-- What is my address?
-- What are my recent orders?
-- What is my account status?
-- Show my invoices.
-- Show my subscriptions.
-━━━
+    return `Analyze the database schema and return a compact product-capability review for a read-only voice AI assistant.
+
+Return ONLY valid JSON. No markdown, comments, code fences, or extra text.
+
+GOAL
+- Infer the business domain and a short summary.
+- Propose customer-facing read/search capabilities.
+- Infer business rules from entities and relationships.
+- Suggest practical API/data improvements.
+- Highlight when a capability likely needs a multi-step workflow: auth user_id -> related entity lookup -> final response.
+
+ASSUMPTIONS
+- App is READ ONLY.
+- Authenticated user/customer/session are already known by backend.
+- Never require or expose customer_id/user_id in public endpoints.
+- Internal workflow/tool execution may start from authenticated user_id.
+- If target data depends on another identifier (for example customer_id, account_id, profile_id, subscription_id), suggest a workflow that first resolves that identifier from user_id, then uses it for the final read.
+- Prefer capabilities that can be fulfilled either directly by user_id or by a user_id -> related_id -> final data lookup chain.
+- Capabilities should map to natural user questions like profile, address, orders, invoices, subscriptions, account status, product search.
+
 CAPABILITY RULES
-━━━
-Generate realistic customer-facing capabilities.
-Each capability must represent ONE business question.
-Use schema entity names whenever possible.
-Capability ids:
-- snake_case
-- unique
-- descriptive
-Examples:
-get_user_profile
-get_user_address
-get_order_history
-get_customer_status
-search_products
-━━━
-CATEGORY RULES
-━━━
-Allowed categories ONLY:
-READ
-SEARCH
-Do NOT generate:
-CREATE
-UPDATE
-DELETE
-REPORT
-WORKFLOW
-━━━
-HTTP RULES
-━━━
-Allowed HTTP methods:
-GET only.
-━━━
-ENDPOINT RULES
-━━━
-Generate REST endpoints WITHOUT path parameters.
-GOOD
-/users/profile
-/users/address
-/users/orders
-/users/invoices
-/orders/history
-/customer/status
-The authenticated customer will always be determined by the backend.
-━━━
+- Each capability answers exactly ONE business question.
+- Prefer names grounded in schema entities.
+- Only categories: READ, SEARCH.
+- suggestedMethod must always be GET.
+- suggestedEndpoint must be REST-style, lowercase, no path params, no IDs.
+- Good endpoint examples: /users/profile, /users/orders, /orders/history, /customer/status, /products/search
+- id must be unique, descriptive, snake_case.
+- Include only capabilities supported by the schema.
+- Prefer capabilities that are scoped to the authenticated user.
+- When direct user-scoped access is not obvious, infer capabilities that can be implemented through an internal lookup chain starting from user_id.
+- Avoid internal/admin/write/reporting capabilities unless clearly customer-facing and read-only.
+
 BUSINESS RULES
-━━━
-Generate realistic business rules inferred from the schema.
-Examples:
-- A customer may have multiple orders.
-- Every order belongs to exactly one customer.
-- An inactive account cannot access premium services.
-- Orders cannot exist without a customer.
-━━━
+- Infer realistic rules only from schema evidence.
+- Keep each rule specific and tied to listed entities.
+
 SUGGESTIONS
-━━━
-Generate useful architectural suggestions such as:
-- Missing indexes
-- Missing foreign keys
-- Audit logging
-- Soft delete
-- Pagination
-- Search optimization
-- Data validation
-- API improvements
-━━━
-OUTPUT RULES
-━━━
-Return ONLY valid JSON.
-Do NOT include:
-- markdown
-- explanations
-- comments
-- code fences
-- additional text
-The JSON MUST exactly match this schema.
+- Prefer concrete architectural suggestions: indexes, foreign keys, pagination, search optimization, auditability, soft delete, validation, naming consistency, API shape.
+- Include workflow-oriented suggestions when relevant, especially: resolve customer/account/profile/subscription/order ownership from authenticated user_id before reading final data.
+- If schema separation requires multiple reads, suggest creating an internal lookup workflow/tool chain rather than exposing raw IDs to clients.
+- Keep suggestions grounded in likely schema gaps or risks.
+
+OUTPUT JSON SHAPE
 {
   "domain": "string",
   "summary": "string",
-  "confidence": number,
+  "confidence": 0,
   "capabilities": [
     {
       "id": "string",
       "name": "string",
       "description": "string",
       "entities": ["string"],
-      "category": "READ" | "SEARCH",
-      "confidence": number,
+      "category": "READ",
+      "confidence": 0,
       "suggestedEndpoint": "string",
       "suggestedMethod": "GET"
     }
@@ -251,20 +186,28 @@ The JSON MUST exactly match this schema.
       "id": "string",
       "rule": "string",
       "entities": ["string"],
-      "confidence": number
+      "confidence": 0
     }
   ],
   "suggestions": [
     {
       "title": "string",
       "reason": "string",
-      "priority": "low" | "medium" | "high"
+      "priority": "low"
     }
   ]
 }
-━━━
-DATABASE SCHEMA
-━━━
-${JSON.stringify(schemaJson, null, 2)}
+
+STRICT RULES
+- Use exactly these top-level keys: domain, summary, confidence, capabilities, businessRules, suggestions.
+- category must be only READ or SEARCH.
+- suggestedMethod must be only GET.
+- priority must be only low, medium, or high.
+- confidence must be a number from 0 to 1.
+- If uncertain, lower confidence instead of inventing facts.
+- Output must be parseable JSON.
+
+DATABASE_SCHEMA
+${JSON.stringify(schemaJson)}
 `;
 }

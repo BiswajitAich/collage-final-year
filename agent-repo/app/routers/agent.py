@@ -13,46 +13,46 @@ router = APIRouter(prefix="/agent", tags=["agent"])
 # ── Mock tools (dev / testing) ────────────────────────────────────────────────
 
 MOCK_TOOLS: list[dict[str, Any]] = [
-    {
-        "id": "mock-1",
-        "name": "customers-status",
-        "description": "Get customer status details.",
-        "purpose": "Get customer status details.",
-        "httpMethod": "GET",
-        "url": "http://localhost:5678/webhook/users/customer-status",
-        "n8nWebhookUrl": "http://localhost:5678/webhook/users/customer-status",
-        "status": "ACTIVE",
-        "toolSchema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string",
-                    "description": "Customer ID",
-                }
-            },
-            "required": ["customer_id"],
-        },
-    },
-    {
-        "id": "mock-2",
-        "name": "customers-details",
-        "description": "Get detailed information about a customer.",
-        "purpose": "Get detailed information about a customer.",
-        "httpMethod": "GET",
-        "url": "http://localhost:5678/webhook/frontend-test-4",
-        "n8nWebhookUrl": "http://localhost:5678/webhook/frontend-test-4",
-        "status": "ACTIVE",
-        "toolSchema": {
-            "type": "object",
-            "properties": {
-                "customer_id": {
-                    "type": "string",
-                    "description": "Customer ID",
-                }
-            },
-            "required": ["customer_id"],
-        },
-    },
+    # {
+    #     "id": "mock-1",
+    #     "name": "customers-status",
+    #     "description": "Get customer status details.",
+    #     "purpose": "Get customer status details.",
+    #     "httpMethod": "GET",
+    #     "url": "http://localhost:5678/webhook/users/customer-status",
+    #     "n8nWebhookUrl": "http://localhost:5678/webhook/users/customer-status",
+    #     "status": "ACTIVE",
+    #     "toolSchema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "customer_id": {
+    #                 "type": "string",
+    #                 "description": "Customer ID",
+    #             }
+    #         },
+    #         "required": ["customer_id"],
+    #     },
+    # },
+    # {
+    #     "id": "mock-2",
+    #     "name": "customers-details",
+    #     "description": "Get detailed information about a customer.",
+    #     "purpose": "Get detailed information about a customer.",
+    #     "httpMethod": "GET",
+    #     "url": "http://localhost:5678/webhook/frontend-test-4",
+    #     "n8nWebhookUrl": "http://localhost:5678/webhook/frontend-test-4",
+    #     "status": "ACTIVE",
+    #     "toolSchema": {
+    #         "type": "object",
+    #         "properties": {
+    #             "customer_id": {
+    #                 "type": "string",
+    #                 "description": "Customer ID",
+    #             }
+    #         },
+    #         "required": ["customer_id"],
+    #     },
+    # },
 ]
 
 

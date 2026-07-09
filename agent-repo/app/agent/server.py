@@ -49,7 +49,7 @@ async def entrypoint(ctx: JobContext):
 
     session = AgentSession(
         stt=inference.STT(
-            model="assemblyai/universal-streaming-multilingual",
+            model="Fish Audio S2.1 Pro",
         ),
         llm=inference.LLM(
             model="google/gemini-2.5-flash-lite",

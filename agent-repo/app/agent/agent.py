@@ -30,14 +30,16 @@ class DefaultAgent(Agent):
         print(instructions)
         print("=" * 100)
 
+        end_call_tool = EndCallTool(
+            extra_description=extra_description,
+            end_instructions=end_instructions,
+            delete_room=True,
+        )
+
         super().__init__(
             instructions=instructions,
             tools=[
-                EndCallTool(
-                    extra_description=extra_description,
-                    end_instructions=end_instructions,
-                    delete_room=True,
-                ),
+                *end_call_tool.tools,
                 # self.get_user_information,
                 # self.list_available_tools,
             ],
@@ -74,7 +76,9 @@ class DefaultAgent(Agent):
         description=(
             "Execute one of the available workflows. "
             "workflow_name must exactly match one of the available tools. "
-            "arguments_json must be a JSON object containing all required parameters."
+            "arguments_json must be a JSON object containing all required parameters. "
+            "For caller-specific requests, include the known customer_id by default and include user_id when relevant. "
+            "Do not ask the caller to provide IDs that are already known internally."
         ),
     )
     async def execute_workflow(
