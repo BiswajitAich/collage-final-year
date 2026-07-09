@@ -57,6 +57,7 @@ model Workflow {
   n8nWebhookUrl   String?
 
   workflowJson Json?
+  toolSchema   Json?
 
   executionCount Int   @default(0)
   successRate    Float @default(0)

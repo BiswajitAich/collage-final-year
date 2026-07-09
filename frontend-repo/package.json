@@ -1,46 +1,48 @@
 {
-  "$schema": "https://json.schemastore.org/package.json",
-  "name": "ai-workflow-platform",
-  "version": "0.1.0",
-  "private": true,
-  "scripts": {
-    "dev": "next dev --webpack",
-    "build": "next build",
-    "start": "next start"
-  },
-  "dependencies": {
-    "@ai-sdk/groq": "^3.0.39",
-    "@hookform/resolvers": "^5.4.0",
-    "@livekit/components-react": "^2.9.21",
-    "@livekit/components-styles": "^1.2.0",
-    "@prisma/adapter-pg": "^7.8.0",
-    "@prisma/client": "^7.8.0",
-    "ai": "^6.0.197",
-    "bcrypt": "^6.0.0",
-    "livekit-client": "^2.19.1",
-    "lucide-react": "^1.17.0",
-    "next": "16.2.6",
-    "pg": "^8.21.0",
-    "react": "19.2.4",
-    "react-dom": "19.2.4",
-    "react-hook-form": "^7.76.1",
-    "react-syntax-highlighter": "^16.1.1",
-    "reactflow": "^11.11.4",
-    "zod": "^4.4.3",
-    "zustand": "^5.0.14"
-  },
-  "devDependencies": {
-    "@types/bcrypt": "^6.0.0",
-    "@types/node": "^20",
-    "@types/pg": "^8.20.0",
-    "@types/react": "^19",
-    "@types/react-dom": "^19",
-    "@types/react-syntax-highlighter": "^15.5.13",
-    "prisma": "^7.8.0",
-    "tsx": "^4.23.0",
-    "typescript": "^5"
-  },
-  "prisma": {
-    "seed": "tsx prisma/seed.ts"
-  }
+    "$schema": "https://json.schemastore.org/package.json",
+    "name": "ai-workflow-platform",
+    "version": "0.1.0",
+    "private": true,
+    "scripts": {
+        "dev": "next dev --webpack",
+        "build": "next build",
+        "start": "next start",
+        "test": "vitest run"
+    },
+    "dependencies": {
+        "@ai-sdk/groq": "^3.0.39",
+        "@hookform/resolvers": "^5.4.0",
+        "@livekit/components-react": "^2.9.21",
+        "@livekit/components-styles": "^1.2.0",
+        "@prisma/adapter-pg": "^7.8.0",
+        "@prisma/client": "^7.8.0",
+        "ai": "^6.0.197",
+        "bcrypt": "^6.0.0",
+        "livekit-client": "^2.19.1",
+        "lucide-react": "^1.17.0",
+        "next": "16.2.6",
+        "pg": "^8.21.0",
+        "react": "19.2.4",
+        "react-dom": "19.2.4",
+        "react-hook-form": "^7.76.1",
+        "react-syntax-highlighter": "^16.1.1",
+        "reactflow": "^11.11.4",
+        "zod": "^4.4.3",
+        "zustand": "^5.0.14"
+    },
+    "devDependencies": {
+        "@types/bcrypt": "^6.0.0",
+        "@types/node": "^20",
+        "@types/pg": "^8.20.0",
+        "@types/react": "^19",
+        "@types/react-dom": "^19",
+        "@types/react-syntax-highlighter": "^15.5.13",
+        "prisma": "^7.8.0",
+        "tsx": "^4.23.0",
+        "typescript": "^5",
+        "vitest": "^4.1.10"
+    },
+    "prisma": {
+        "seed": "tsx prisma/seed.ts"
+    }
 }

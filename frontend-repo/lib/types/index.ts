@@ -205,6 +205,7 @@ export interface Workflow {
   avgLatencyMs: number;
   n8nWorkflowId?: String;
   n8nWorkflowJson?: Prisma.JsonValue;
+  toolSchema?: Prisma.JsonValue | null;
   approvedAt: Date | null;
   approvedById: string | null;
   ownerId: string;

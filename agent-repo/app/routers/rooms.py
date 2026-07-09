@@ -1,6 +1,7 @@
 import uuid
 import logging
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 from app.config import LIVEKIT_URL
 from app.database import get_db
@@ -28,35 +29,58 @@ async def create_room(
     """
     Create a LiveKit room, dispatch the AI agent, and return a participant token.
     """
-    room_name = f"room-{req.user_id[:12]}-{uuid.uuid4().hex[:8]}"
-
-    metadata = {
-        "user_id": req.user_id,
-        "customer_id": req.customer_id,
-        "caller_phone_number": req.phone_number or req.customer_id or "",
-        "name": req.name or "User",
-    }
+    operator_id = req.admin_id or req.customer_id
+    room_name = f"room-{req.customer_id[:12]}-{uuid.uuid4().hex[:8]}"
+    session = None
 
     try:
+        try:
+            session = await session_service.create_session(
+                db=db,
+                user_id=operator_id,
+                customer_id=req.customer_id,
+                room_name=room_name,
+                phone_number=req.phone_number,
+                name=req.name,
+            )
+        except IntegrityError as exc:
+            await db.rollback()
+            raise HTTPException(
+                status_code=400,
+                detail=(
+                    f"Invalid customer_id '{req.customer_id}'"
+                    if not req.admin_id
+                    else f"Invalid admin_id/customer_id combination for '{req.customer_id}'"
+                ),
+            ) from exc
+
+        metadata = {
+            "session_id": session.id,
+            "admin_id": req.admin_id or "",
+            "user_id": req.customer_id,
+            "customer_id": req.customer_id,
+            "caller_phone_number": req.phone_number or req.customer_id or "",
+            "name": req.name or "User",
+        }
         await livekit_service.create_room(room_name)
         token = await livekit_service.create_participant_token(
             room_name=room_name,
-            identity=req.user_id,
+            identity=operator_id,
             name=req.name or "User",
             metadata=metadata,
         )
         await livekit_service.dispatch_agent(room_name=room_name, metadata=metadata)
-        session = await session_service.create_session(
-            db=db,
-            user_id=req.user_id,
-            customer_id=req.customer_id,
-            room_name=room_name,
-            phone_number=req.phone_number,
-            name=req.name,
-        )
 
+    except HTTPException:
+        raise
     except Exception as exc:
-        logger.exception("Failed to create room for user=%s", req.user_id)
+        if session is not None:
+            await session_service.fail_sessions_for_room(db, room_name)
+        logger.exception(
+            "Failed to create room for customer=%s operator=%s",
+            req.customer_id,
+            operator_id,
+        )
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return CreateRoomResponse(

@@ -1,22 +1,35 @@
 import re
 from typing import Optional
 
-from pydantic import BaseModel, field_validator
+from pydantic import AliasChoices, BaseModel, ConfigDict, Field, field_validator
 
 
 # ── /rooms/create ─────────────────────────────────────────────────────────────
 
 class CreateRoomRequest(BaseModel):
-    user_id: str
+    model_config = ConfigDict(populate_by_name=True)
+
+    admin_id: Optional[str] = Field(
+        default=None,
+        validation_alias=AliasChoices("admin_id", "adminId", "user_id", "userId"),
+    )
     customer_id: str
     name: Optional[str] = None
-    phone_number: Optional[str] = None  
+    phone_number: Optional[str] = None
 
-    @field_validator("user_id")
+    @field_validator("admin_id")
     @classmethod
-    def user_id_not_empty(cls, v: str) -> str:
+    def admin_id_strip(cls, v: Optional[str]) -> Optional[str]:
+        if v is None:
+            return None
+        value = v.strip()
+        return value or None
+
+    @field_validator("customer_id")
+    @classmethod
+    def customer_id_not_empty(cls, v: str) -> str:
         if not v.strip():
-            raise ValueError("user_id must not be empty")
+            raise ValueError("customer_id must not be empty")
         return v.strip()
 
 

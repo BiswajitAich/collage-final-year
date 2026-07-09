@@ -1,0 +1,26 @@
+[
+    {
+        "label": "1. Run Frontend",
+        "command": "cd $ZED_WORKTREE_ROOT/frontend-repo && npm run dev",
+        "use_new_terminal": true,
+        "allow_concurrent_runs": true
+    },
+    {
+        "label": "2. Run FastAPI",
+        "command": "cd $ZED_WORKTREE_ROOT/agent-repo && uv run fastapi dev",
+        "use_new_terminal": true,
+        "allow_concurrent_runs": true
+    },
+    {
+        "label": "3. Run LiveKit Agent",
+        "command": "cd $ZED_WORKTREE_ROOT/agent-repo && source .venv/bin/activate && python3 -m app.livekit_agent dev",
+        "use_new_terminal": true,
+        "allow_concurrent_runs": true
+    },
+    {
+        "label": "4. Run n8n Docker",
+        "command": "cd $ZED_WORKTREE_ROOT/n8n-repo && docker-compose up",
+        "use_new_terminal": true,
+        "allow_concurrent_runs": true
+    }
+]

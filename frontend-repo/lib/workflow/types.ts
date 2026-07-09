@@ -22,41 +22,41 @@ export type DbOperation = "read";
 // ── Per-node config shapes ────────────────────────────────────────────────────
 
 export interface WebhookConfig {
-  path: string;
-  method: HttpMethod;
+    path: string;
+    method: HttpMethod;
 }
 
 export interface ValidationConfig {
-  rules: string; // e.g. "required fields: id, email"
-  strict: boolean;
+    rules: string; // e.g. "required fields: id, email"
+    strict: boolean;
 }
 
 export interface DatabaseConfig {
-  table: string;
-  operation: DbOperation;
-  key: string;
+    table: string;
+    operation: DbOperation;
+    key: string;
 }
 
 export interface ApiCallConfig {
-  url: string;
-  method: HttpMethod;
-  headers?: Record<string, string>;
-  retry?: boolean;
-  bodyTemplate?: Record<string, unknown>;
+    url: string;
+    method: HttpMethod;
+    headers?: Record<string, string>;
+    retry?: boolean;
+    bodyTemplate?: Record<string, unknown>;
 }
 
 export interface BusinessLogicConfig {
-  logic: string;
+    logic: string;
 }
 
 export interface ErrorConfig {
-  message?: string;
-  errorCode?: number;
+    message?: string;
+    errorCode?: number;
 }
 
 export interface ResponseConfig {
-  statusCode: number;
-  response: string;
+    statusCode: number;
+    response: string;
 }
 
 // export type NodeConfig =
@@ -119,8 +119,8 @@ export interface ResponseConfig {
 // ── Compiler result ───────────────────────────────────────────────────────────
 
 export interface CompileResult {
-  success: boolean;
-  workflow?: import("./n8n-types").N8nWorkflow;
-  errors?: string[];
-  warnings?: string[];
+    success: boolean;
+    workflow?: import("./n8n-types").N8nWorkflowCreate;
+    errors?: string[];
+    warnings?: string[];
 }

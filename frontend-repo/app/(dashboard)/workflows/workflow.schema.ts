@@ -17,12 +17,12 @@ export const NodeType = z.enum([
     "webhook",
     "validation",
     "database",
-    "api-call",
     "response",
+    "transform",
     "error",
     "condition",
     "merge",
-])
+]);
 export const NodeSchema = z.object({
     id: z.string(),
     type: NodeType,
@@ -46,8 +46,8 @@ export const EdgeSchema = z.object({
 export const HttpMethod = z.enum(["GET", "POST", "PUT", "PATCH", "DELETE"]);
 export const EndpointType = z.enum(["REST", "WEBHOOK"]);
 export const WorkflowGraphSchema = z.object({
-    id: z.string(),
-    name: z.string(),
+    id: z.string().optional(),
+    name: z.string().optional(),
     description: z.string().optional().default(""),
     httpMethod: HttpMethod.optional().default("GET"),
     endpointType: EndpointType.optional().default("REST"),

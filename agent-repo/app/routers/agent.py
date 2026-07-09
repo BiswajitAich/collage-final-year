@@ -19,8 +19,19 @@ MOCK_TOOLS: list[dict[str, Any]] = [
         "description": "Get customer status details.",
         "purpose": "Get customer status details.",
         "httpMethod": "GET",
-        "endpoint": "http://localhost:5678/webhook/users/customer-status",
+        "url": "http://localhost:5678/webhook/users/customer-status",
         "n8nWebhookUrl": "http://localhost:5678/webhook/users/customer-status",
+        "status": "ACTIVE",
+        "toolSchema": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "string",
+                    "description": "Customer ID",
+                }
+            },
+            "required": ["customer_id"],
+        },
     },
     {
         "id": "mock-2",
@@ -28,8 +39,19 @@ MOCK_TOOLS: list[dict[str, Any]] = [
         "description": "Get detailed information about a customer.",
         "purpose": "Get detailed information about a customer.",
         "httpMethod": "GET",
-        "endpoint": "http://localhost:5678/webhook/frontend-test-4",
+        "url": "http://localhost:5678/webhook/frontend-test-4",
         "n8nWebhookUrl": "http://localhost:5678/webhook/frontend-test-4",
+        "status": "ACTIVE",
+        "toolSchema": {
+            "type": "object",
+            "properties": {
+                "customer_id": {
+                    "type": "string",
+                    "description": "Customer ID",
+                }
+            },
+            "required": ["customer_id"],
+        },
     },
 ]
 
@@ -40,8 +62,10 @@ class WorkflowTool(BaseModel):
     description: Optional[str] = None
     purpose: Optional[str] = None
     httpMethod: str
-    endpoint: str
+    url: str
     n8nWebhookUrl: Optional[str] = None
+    status: Optional[str] = None
+    toolSchema: Optional[dict[str, Any]] = None
 
 
 class ToolRegistryResponse(BaseModel):
@@ -72,8 +96,10 @@ async def _fetch_from_db() -> list[WorkflowTool]:
                     description,
                     purpose,
                     "httpMethod",
-                    endpoint,
-                    "n8nWebhookUrl"
+                                        COALESCE("n8nWebhookUrl", endpoint) AS url,
+                                        "n8nWebhookUrl",
+                                        status,
+                                        "toolSchema"
                 FROM "Workflow"
                 WHERE status = 'ACTIVE'
                   AND COALESCE("n8nWebhookUrl", endpoint) IS NOT NULL
@@ -90,8 +116,10 @@ async def _fetch_from_db() -> list[WorkflowTool]:
             description=row["description"],
             purpose=row["purpose"],
             httpMethod=row["httpMethod"],
-            endpoint=_normalize_webhook_url(row["n8nWebhookUrl"]) or row["endpoint"],
+            url=_normalize_webhook_url(row["url"]),
             n8nWebhookUrl=row["n8nWebhookUrl"],
+            status=row["status"],
+            toolSchema=row["toolSchema"],
         )
         for row in rows
     ]

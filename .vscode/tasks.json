@@ -1,0 +1,49 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Frontend",
+            "type": "shell",
+            "command": "npm run dev",
+            "options": {
+                "cwd": "${workspaceFolder}/frontend-repo"
+            },
+            "isBackground": true,
+            "presentation": {
+                "panel": "dedicated",
+                "group": "dev"
+            }
+        },
+        {
+            "label": "FastAPI",
+            "type": "shell",
+            "command": "uv run fastapi dev",
+            "options": {
+                "cwd": "${workspaceFolder}/agent-repo"
+            },
+            "isBackground": true,
+            "presentation": {
+                "panel": "dedicated",
+                "group": "dev"
+            }
+        },
+        {
+            "label": "LiveKit Agent",
+            "type": "shell",
+            "command": "source .venv/bin/activate && python3 app/livekit_agent.py dev",
+            "options": {
+                "cwd": "${workspaceFolder}/agent-repo"
+            },
+            "isBackground": true,
+            "presentation": {
+                "panel": "dedicated",
+                "group": "dev"
+            }
+        },
+        {
+            "label": "Start Everything",
+            "dependsOn": ["Frontend", "FastAPI", "LiveKit Agent"],
+            "dependsOrder": "parallel"
+        }
+    ]
+}

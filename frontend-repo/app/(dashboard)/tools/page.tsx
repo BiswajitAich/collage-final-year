@@ -18,7 +18,7 @@ import { getDbTools, updateDbToolStatus, syncDbTool } from "./action";
 import type { TableColumn } from "@/lib/types";
 import styles from "./tools.module.css";
 
-type StatusFilter = 'all' | 'ACTIVE' | 'INACTIVE' | 'ERROR';
+type StatusFilter = "all" | "ACTIVE" | "INACTIVE" | "ERROR";
 
 export default function ToolsPage() {
     const tools = useToolStore((s) => s.tools);
@@ -194,22 +194,18 @@ export default function ToolsPage() {
                         )}
                     </button>
                     <button
-                        className={`${styles.actionBtn} ${String(row.status) === "ACTIVE"                                  ? styles.disableBtn
-                                  : styles.enableBtn}`}
+                        className={`${styles.actionBtn} ${String(row.status) === "ACTIVE" ? styles.disableBtn : styles.enableBtn}`}
                         title={
                             String(row.status) === "ACTIVE"
-                                  ? "Disable"
-                                  : "Enable"
+                                ? "Disable"
+                                : "Enable"
                         }
                         onClick={(e) => {
                             e.stopPropagation();
                             handleToggle(row);
                         }}
                     >
-                        <Power
-                            size={13}
-
-                        />
+                        <Power size={13} />
                     </button>
                 </div>
             ),
@@ -295,16 +291,8 @@ export default function ToolsPage() {
                 </div>
                 <div className={styles.statusFilters}>
                     {(
-                        [
-                            "all",
-                            "ACTIVE",
-                            "DISABLED",
-                            "ERROR",
-                            "DEPRECATED",
-                            "SYNCING",
-                            "UNAVAILABLE",
-                        ] as StatusFilter[]
-NCTIV                    ).map((s) => (
+                        ["all", "ACTIVE", "INACTIVE", "ERROR"] as StatusFilter[]
+                    ).map((s) => (
                         <button
                             key={s}
                             className={`${styles.filterPill} ${statusFilter === s ? styles.filterPillActive : ""}`}

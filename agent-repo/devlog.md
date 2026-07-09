@@ -129,7 +129,7 @@ No STT/LLM/TTS activity logged at all after session start.
 
 **Problem:** Agent didn't know what tools it had — the system prompt said "You have access to tools" but never listed them.
 
-**Fix:** Added `{{tools_summary}}` placeholder in `agent_prompt`, and the `DefaultAgent.__init__` passes `extra={"tools_summary": tool_registry.summary_text()}` to `self._templater.render()`.
+**Fix:** Added `{{tools_summary}}` placeholder in `agent_prompt`, and the `DefaultAgent.__init__` passes `extra={"tools_summary": tool_registry.capabilities_text()}` to `self._templater.render()`.
 
 ### 4. "User not verified" removed from EndCallTool
 

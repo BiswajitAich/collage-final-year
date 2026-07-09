@@ -70,6 +70,16 @@ async def mark_active(db: AsyncSession, session_id: str) -> None:
     logger.info("Session %s → ACTIVE", session_id)
 
 
+async def increment_tool_call_count(db: AsyncSession, session_id: str, delta: int = 1) -> None:
+    await db.execute(
+        update(VoiceSession)
+        .where(VoiceSession.id == session_id)
+        .values(toolCallCount=VoiceSession.toolCallCount + delta)
+    )
+    await db.commit()
+    logger.info("Session %s toolCallCount incremented by %s", session_id, delta)
+
+
 async def end_session(
     db: AsyncSession,
     session_id: str,
