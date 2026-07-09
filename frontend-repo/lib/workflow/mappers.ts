@@ -158,14 +158,11 @@ export function mapGeneric(
         }
 
         case "error": {
-            const statusCode =
-                typeof nodeConfig.status === "number" ? nodeConfig.status : 400;
             mapped.parameters = {
-                respondWith: "json",
-                responseCode: statusCode,
-                responseBody:
-                    '={{ { success: false, error: $json.error || $json.message || "Workflow failed" } }}',
-                options: {},
+                errorMessage:
+                    typeof nodeConfig.errorMessage === "string"
+                        ? nodeConfig.errorMessage
+                        : "Workflow failed",
             };
             break;
         }

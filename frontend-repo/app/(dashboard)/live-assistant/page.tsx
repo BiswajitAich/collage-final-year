@@ -248,27 +248,25 @@ export default function LiveAssistantPage() {
                             <div className={styles.fieldGrid}>
                                 <div className={styles.field}>
                                     <label htmlFor="adminId">Admin ID</label>
-                                    <input
-                                        id="adminId"
-                                        value={adminId}
-                                        // onChange={(e) =>
-                                        //     setAdminId(e.target.value)
-                                        // }
-                                        placeholder="Admin ID"
-                                    />
+                                <input
+                                    id="adminId"
+                                    value={adminId}
+                                    readOnly
+                                    placeholder="Admin ID"
+                                />
                                 </div>
                                 <div className={styles.field}>
                                     <label htmlFor="customerId">
                                         Customer ID
                                     </label>
-                                    <input
-                                        id="customerId"
-                                        value={customerId}
-                                        onChange={(e) =>
-                                            setCustomerId(e.target.value)
-                                        }
-                                        placeholder="Customer ID"
-                                    />
+<input
+                                    id="customerId"
+                                    value={customerId}
+                                    onChange={(e) =>
+                                      setCustomerId(e.target.value)
+                                    }
+                                    placeholder="Customer ID"
+                                />
                                 </div>
                             </div>
                         </details>
