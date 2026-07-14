@@ -70,31 +70,31 @@ The platform reduces development effort while enabling users to interact with ap
 ﹡Mᴏʙɪʟᴇ ᴄᴀʟʟ ɪs ɴᴏᴛ ɪᴍᴘʟᴇᴍᴇɴᴛᴇᴅ﹗
 
 <p align="center">
-  <img src="/assets/Frontend Layer.drawio.png" alt="Frontend Layer" width="100%">
+  <img src="/assets/Frontend Layer.drawio.png" alt="Frontend Layer" max-width="400px">
 </p>
 
 ## Backend Layer
 
 <p align="center">
-  <img src="/assets/Backend Layer.drawio.png" alt="Backend Layer" width="100%">
+  <img src="/assets/Backend Layer.drawio.png" alt="Backend Layer" max-width="300px">
 </p>
 
 ## Agent Layer
 
 <p align="center">
-  <img src="/assets/Agent Layer.drawio.png" alt="Agent Layer" width="100%">
+  <img src="/assets/Agent Layer.drawio.png" alt="Agent Layer" max-width="400px">
 </p>
 
 ## Session Lifecycle
 
 <p align="center">
-  <img src="/assets/Session Lifecycle.drawio.png" alt="Session Lifecycle" width="100%">
+  <img src="/assets/Session Lifecycle.drawio.png" alt="Session Lifecycle" max-width="400px">
 </p>
 
 ## Workflow Layer
 
 <p align="center">
-  <img src="/assets/Workflow Layer.drawio.png" alt="Workflow Layer" width="100%">
+  <img src="/assets/Workflow Layer.drawio.png" alt="Workflow Layer" max-width="200px">
 </p>
 
 
@@ -311,6 +311,7 @@ http://localhost:8000/docs
 
 Example interaction:
 
+```
 > User:
 >
 > "What is my delivery address?"
@@ -334,7 +335,7 @@ Database Query
 ↓
 
 Voice Response
-
+```
 ---
 
 # Advantages
@@ -417,13 +418,13 @@ Voice Response
 ### Database Schema
 
 <p align="center">
-  <img src="/assets/db.png" alt="Swagger API" width="100%">
+  <img src="/assets/db.png" alt="Swagger API" max-width="400px">
 </p>
 
 ### Architecture Diagram
 
 <p align="center">
-  <img src="/assets/System Architecture.drawio.png" alt="Swagger API" width="100%">
+  <img src="/assets/System Architecture.drawio.png" alt="Swagger API" max-width="400px">
 </p>
 
 <!-----
