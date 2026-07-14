@@ -41,6 +41,7 @@ HARD_RULES
 - Allowed node.type values: ${nodeTypes}.
 - The first node must be a webhook node.
 - Webhook must be the only entry node.
+- Write the details for the workflow properly with needed input, output and the response that will got.
 - Webhook config must be {"method":"${capability.suggestedMethod}","path":"${capability.suggestedEndpoint}"}.
 - The graph must be connected. No orphan nodes.
 - Node ids must be unique. Node labels must be unique.

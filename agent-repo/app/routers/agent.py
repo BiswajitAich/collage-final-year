@@ -116,7 +116,7 @@ async def _fetch_from_db() -> list[WorkflowTool]:
             description=row["description"],
             purpose=row["purpose"],
             httpMethod=row["httpMethod"],
-            url=_normalize_webhook_url(row["url"]),
+            url=_normalize_webhook_url(row["url"]) or "",
             n8nWebhookUrl=row["n8nWebhookUrl"],
             status=row["status"],
             toolSchema=row["toolSchema"],

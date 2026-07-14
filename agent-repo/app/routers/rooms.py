@@ -84,7 +84,7 @@ async def create_room(
         raise HTTPException(status_code=500, detail=str(exc)) from exc
 
     return CreateRoomResponse(
-        session_id=session.id,
+        session_id=str(session.id),
         room_name=room_name,
         token=token,
         livekit_url=LIVEKIT_URL,
@@ -112,7 +112,7 @@ async def initiate_outbound_call(
 
     try:
         await livekit_service.create_sip_outbound_call(
-            room_name=session.roomName,
+            room_name=str(session.roomName),
             phone_number=req.phone_number,
             participant_name=req.name or req.phone_number,
         )
