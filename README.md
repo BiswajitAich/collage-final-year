@@ -3,6 +3,10 @@
 
 > An AI-powered voice automation platform that dynamically generates backend workflows from database schemas and enables natural voice interactions through LiveKit, LLMs, and n8n.
 
+<p align="center">
+  <img src="/assets/Untitled design.png" alt="banner" max-width="400px">
+</p>
+
 ---
 
 ## Team Members
