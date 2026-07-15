@@ -1,10 +1,10 @@
 # AI-Powered Voice Automation Platform
-### Final Year Project
 
 <p align="center">
-  <img src="/assets/final year banner.png" alt="banner" max-width="400px">
+  <img src="/assets/final year banner.png" alt="banner" width="100%">
 </p>
 
+### Final Year Project
 > An AI-powered voice automation platform that dynamically generates backend workflows from database schemas and enables natural voice interactions through LiveKit, LLMs, and n8n.
 
 ---
